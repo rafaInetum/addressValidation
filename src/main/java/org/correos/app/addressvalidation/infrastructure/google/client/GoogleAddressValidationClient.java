@@ -32,7 +32,7 @@ public class GoogleAddressValidationClient {
                     restTemplate.exchange(buildUrl(), HttpMethod.POST, buildRequest(address), GoogleAddressResponse.class);
 
             return Optional.ofNullable(response.getBody())
-                    .orElseThrow(() -> new RuntimeException("Respuesta vacía de Google Address Validation."));
+                    .orElseThrow(() -> new RuntimeException("Respuesta vacía de Google AddressV."));
 
         } catch (RestClientResponseException e) {
             String msg = "Error HTTP llamando a Google Address Validation: status=%d body=%s"
