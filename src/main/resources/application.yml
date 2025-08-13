@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/rafa
+    username: rafa
+    password: mypassword
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+logging:
+  level:
+    root: INFO
+    org.rafa: DEBUG
+    com.zaxxer.hikari: DEBUG
+  file:
+    path: logs
+
+address:
+  complete:
+    url: http://localhost:8081/api/v1/address-complete
+
+google:
+  address:
+    base-url: https://addressvalidation.googleapis.com
+    api-key: AIzaSyBKAgzBLMAY4mqQIaNM9SGAw4Hnoyr1QJ8
+
+
+
+
