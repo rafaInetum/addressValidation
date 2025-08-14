@@ -9,7 +9,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Duration;
 
 @Configuration
-@EnableConfigurationProperties(GoogleAddressProps.class)
+@EnableConfigurationProperties({GoogleAddressValidationProps.class, GoogleApiProps.class})
 public class GoogleAddressConfig {
 
     @Bean

@@ -1,6 +1,7 @@
 package org.correos.app.addressvalidation.infrastructure.google.client;
 
-import org.correos.app.addressvalidation.infrastructure.google.config.GoogleAddressProps;
+import org.correos.app.addressvalidation.infrastructure.google.config.GoogleAddressValidationProps;
+import org.correos.app.addressvalidation.infrastructure.google.config.GoogleApiProps;
 import org.correos.app.addressvalidation.infrastructure.google.dto.request.AddressInput;
 import org.correos.app.addressvalidation.infrastructure.google.dto.response.GoogleAddressResponse;
 import org.correos.app.addressvalidation.infrastructure.google.util.GoogleAddressRequestBuilder;
@@ -17,13 +18,16 @@ import java.util.Optional;
 public class GoogleAddressValidationClient {
 
     private final RestTemplate restTemplate;
-    private final GoogleAddressProps props;
+    private final GoogleAddressValidationProps googleAddressValidationProps;
+    private final GoogleApiProps googleApiProps;
 
 
     public GoogleAddressValidationClient(RestTemplate googleRestTemplate,
-                                         GoogleAddressProps props) {
+                                         GoogleAddressValidationProps props,
+                                         GoogleApiProps googleApiProps) {
         this.restTemplate = googleRestTemplate;
-        this.props = props;
+        this.googleAddressValidationProps = props;
+        this.googleApiProps = googleApiProps;
     }
 
     public GoogleAddressResponse validate(AddressInput address) {
@@ -32,7 +36,7 @@ public class GoogleAddressValidationClient {
                     restTemplate.exchange(buildUrl(), HttpMethod.POST, buildRequest(address), GoogleAddressResponse.class);
 
             return Optional.ofNullable(response.getBody())
-                    .orElseThrow(() -> new RuntimeException("Respuesta vacía de Google Address Validation."));
+                    .orElseThrow(() -> new RuntimeException("Respuesta vacía de Google Address Validation"));
 
         } catch (RestClientResponseException e) {
             String msg = "Error HTTP llamando a Google Address Validation: status=%d body=%s"
@@ -45,9 +49,9 @@ public class GoogleAddressValidationClient {
 
     private String buildUrl() {
         return UriComponentsBuilder
-                .fromHttpUrl(props.baseUrl())
+                .fromHttpUrl(googleAddressValidationProps.baseUrl())
                 .path("/v1:validateAddress")
-                .queryParam("key", props.apiKey())
+                .queryParam("key", googleApiProps.apiKey())
                 .toUriString();
     }
 
