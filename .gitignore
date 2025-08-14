@@ -34,3 +34,7 @@ build/
 
 # Ignore local configuration files
 **/application-local.yml
+
+# Ignorare logs
+*.log
+logs/
