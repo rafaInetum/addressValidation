@@ -1,5 +1,6 @@
 package org.correos.app.addressvalidation.infrastructure.google.client;
 
+import org.correos.app.addressvalidation.application.model.AddressToValidate;
 import org.correos.app.addressvalidation.infrastructure.google.dto.request.AddressInput;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,5 +12,5 @@ import java.util.List;
 public interface AddressCompletionClient {
 
     @PostMapping("/complete-address")
-    List<String> execute(@RequestBody AddressInput JsonAddress);
+    List<String> execute(@RequestBody AddressToValidate address);
 }

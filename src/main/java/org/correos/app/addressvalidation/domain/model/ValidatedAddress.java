@@ -1,7 +1,5 @@
 package org.correos.app.addressvalidation.domain.model;
 
-import org.correos.app.addressvalidation.infrastructure.google.dto.response.Geocode;
-
 import java.util.List;
 
 public record ValidatedAddress(
@@ -13,7 +11,7 @@ public record ValidatedAddress(
         boolean isValid,
         List<String>suggestions,
         Coordinates coordinates,
-        AddressErrorCode error
+        AddressStatusCode status
 ) {
 
     public ValidatedAddress withSuggestions(List<String> newSuggestions) {
@@ -26,21 +24,23 @@ public record ValidatedAddress(
                 this.isValid,
                 newSuggestions,
                 this.coordinates,
-                this.error
+                this.status
         );
     }
 
+    private static final String ERROR_VALUE = "ERROR";
+
     public static ValidatedAddress error(String message) {
         return new ValidatedAddress(
-                "ERROR", // formattedAddress
-                "ERROR", // locality
-                "ERROR", // postalCode
-                "ERROR", // nextAction
+                ERROR_VALUE, // formattedAddress
+                ERROR_VALUE, // locality
+                ERROR_VALUE, // postalCode
+                ERROR_VALUE, // nextAction
                 message, // message
                 false,
                 null,
                 null,// geocode lat/long
-                AddressErrorCode.VALIDATION_FAILED
+                AddressStatusCode.VALIDATION_FAILED
         );
     }
 

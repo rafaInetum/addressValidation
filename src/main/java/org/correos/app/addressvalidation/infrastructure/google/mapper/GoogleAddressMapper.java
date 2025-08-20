@@ -1,6 +1,6 @@
 package org.correos.app.addressvalidation.infrastructure.google.mapper;
 
-import org.correos.app.addressvalidation.domain.model.AddressErrorCode;
+import org.correos.app.addressvalidation.domain.model.AddressStatusCode;
 import org.correos.app.addressvalidation.domain.model.Coordinates;
 import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
 import org.correos.app.addressvalidation.infrastructure.google.dto.response.*;
@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.correos.app.addressvalidation.domain.model.AddressErrorCode.NO_ERROR;
 
 @Component
 public class GoogleAddressMapper {
@@ -60,7 +58,7 @@ public class GoogleAddressMapper {
                 "PREMISE".equalsIgnoreCase(granularity),
                 List.of(),
                 coords,
-                AddressErrorCode.NO_ERROR
+                AddressStatusCode.SUCCESS
         );
     }
 

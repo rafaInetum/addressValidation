@@ -1,9 +1,13 @@
 package org.correos.app.addressvalidation.infrastructure.google.client;
 
+import org.correos.app.addressvalidation.application.model.AddressToValidate;
+import org.correos.app.addressvalidation.application.port.out.AddressValidationPort;
+import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleAddressValidationProps;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleApiProps;
 import org.correos.app.addressvalidation.infrastructure.google.dto.request.AddressInput;
 import org.correos.app.addressvalidation.infrastructure.google.dto.response.GoogleAddressResponse;
+import org.correos.app.addressvalidation.infrastructure.google.mapper.GoogleAddressMapper;
 import org.correos.app.addressvalidation.infrastructure.google.util.GoogleAddressRequestBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -20,23 +24,34 @@ public class GoogleAddressValidationClient {
     private final RestTemplate restTemplate;
     private final GoogleAddressValidationProps googleAddressValidationProps;
     private final GoogleApiProps googleApiProps;
-
+    private final GoogleAddressMapper mapper;
 
     public GoogleAddressValidationClient(RestTemplate googleRestTemplate,
                                          GoogleAddressValidationProps props,
-                                         GoogleApiProps googleApiProps) {
+                                         GoogleApiProps googleApiProps,
+                                         GoogleAddressMapper mapper) {
         this.restTemplate = googleRestTemplate;
         this.googleAddressValidationProps = props;
         this.googleApiProps = googleApiProps;
+        this.mapper = mapper;
     }
 
-    public GoogleAddressResponse validate(AddressInput address) {
-        try {
-            ResponseEntity<GoogleAddressResponse> response =
-                    restTemplate.exchange(buildUrl(), HttpMethod.POST, buildRequest(address), GoogleAddressResponse.class);
+    public ValidatedAddress requestValidation(AddressToValidate address) {
 
-            return Optional.ofNullable(response.getBody())
+        AddressInput googleAddress = toGoogleInput(address);
+
+        try {
+            ResponseEntity<GoogleAddressResponse> response = restTemplate.exchange(
+                    buildUrl(),
+                    HttpMethod.POST,
+                    buildRequest(googleAddress),
+                    GoogleAddressResponse.class
+            );
+
+            GoogleAddressResponse body = Optional.ofNullable(response.getBody())
                     .orElseThrow(() -> new RuntimeException("Respuesta vacía de Google Address Validation"));
+
+            return mapToValidatedAddress(body);
 
         } catch (RestClientResponseException e) {
             String msg = "Error HTTP llamando a Google Address Validation: status=%d body=%s"
@@ -45,6 +60,15 @@ public class GoogleAddressValidationClient {
         } catch (Exception e) {
             throw new RuntimeException("Error al validar dirección con Google", e);
         }
+    }
+
+    private AddressInput toGoogleInput(AddressToValidate input) {
+        return new AddressInput(
+                input.regionCode(),
+                input.locality(),
+                input.postalCode(),
+                input.addressLines()
+        );
     }
 
     private String buildUrl() {
@@ -61,5 +85,9 @@ public class GoogleAddressValidationClient {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
         return new HttpEntity<>(jsonBody, headers);
+    }
+
+    private ValidatedAddress mapToValidatedAddress(GoogleAddressResponse response) {
+        return mapper.toDomain(response);
     }
 }
