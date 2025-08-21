@@ -1,6 +1,6 @@
 package org.correos.app.addressvalidation.infrastructure.google.util;
 
-import org.correos.app.addressvalidation.infrastructure.google.dto.response.NextAction;
+import org.correos.app.addressvalidation.domain.model.NextAction;
 
 public class NextActionMessageResolver {
 

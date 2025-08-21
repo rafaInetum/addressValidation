@@ -1,24 +1,31 @@
 package org.correos.app.addressvalidation.api.mapper;
 
 import org.correos.app.addressvalidation.api.dto.AddressRequestDto;
-import org.correos.app.addressvalidation.application.model.AddressToValidate;
+import org.correos.app.addressvalidation.api.dto.ValidatedAddressResponseDto;
+import org.correos.app.addressvalidation.application.model.RawAddressToValidate;
+import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AddressDtoMapper {
 
-    public static AddressToValidate toModel(AddressRequestDto dto) {
-        return new AddressToValidate(
-                dto.regionCode(),
-                dto.locality(),
-                dto.postalCode(),
-                dto.addressLines()
-        );
+    public static List<RawAddressToValidate> toModelList(List<AddressRequestDto> dtos) {
+        return dtos.stream().map(AddressDtoMapper::toModel).collect(Collectors.toList());
     }
 
-    public static List<AddressToValidate> toModelList(List<AddressRequestDto> dtos) {
-        return dtos.stream()
-                .map(AddressDtoMapper::toModel)
-                .toList();
+    public static RawAddressToValidate toModel(AddressRequestDto dto) {
+        return new RawAddressToValidate(dto.rawText(), dto.localeHint());
     }
+
+    public static ValidatedAddressResponseDto toDto(ValidatedAddress model) {
+        return new ValidatedAddressResponseDto(model, model.nextAction());
+    }
+
+    public static List<ValidatedAddressResponseDto> toDtoList(List<ValidatedAddress> models) {
+        return models.stream()
+                .map(AddressDtoMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
 }

@@ -1,12 +1,10 @@
 package org.correos.app.addressvalidation.api.controller;
 
-import org.correos.app.addressvalidation.api.dto.AddressRequestDto;
+import org.correos.app.addressvalidation.api.dto.*;
 import org.correos.app.addressvalidation.api.mapper.AddressDtoMapper;
-import org.correos.app.addressvalidation.application.model.AddressToValidate;
-import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
+import org.correos.app.addressvalidation.application.model.RawAddressToValidate;
 import org.correos.app.addressvalidation.application.port.in.ValidateAddressUseCase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,10 +20,10 @@ public class AddressValidationController {
         this.validateAddressUseCase = validateAddressUseCase;
     }
 
-    @PostMapping("/validation")
-    public ResponseEntity<List<ValidatedAddress>> validateAddresses(@RequestBody List<AddressRequestDto> dtos) {
-        List<AddressToValidate> addresses = AddressDtoMapper.toModelList(dtos);
-        return ResponseEntity.ok(validateAddressUseCase.execute(addresses));
+    @PostMapping("/validate")
+    public ResponseEntity<List<ValidatedAddressResponseDto>> validateAddresses(@RequestBody List<AddressRequestDto> dtos) {
+        List<RawAddressToValidate> toValidate = AddressDtoMapper.toModelList(dtos);
+        List<ValidatedAddress> results = validateAddressUseCase.execute(toValidate);
+        return ResponseEntity.ok(AddressDtoMapper.toDtoList(results));
     }
-
 }

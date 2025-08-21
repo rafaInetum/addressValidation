@@ -1,7 +1,6 @@
 package org.correos.app.addressvalidation.infrastructure.google.client;
 
 import org.correos.app.addressvalidation.application.model.AddressToValidate;
-import org.correos.app.addressvalidation.application.port.out.AddressValidationPort;
 import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleAddressValidationProps;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleApiProps;

@@ -2,6 +2,7 @@ package org.correos.app.addressvalidation.infrastructure.google.mapper;
 
 import org.correos.app.addressvalidation.domain.model.AddressStatusCode;
 import org.correos.app.addressvalidation.domain.model.Coordinates;
+import org.correos.app.addressvalidation.domain.model.NextAction;
 import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
 import org.correos.app.addressvalidation.infrastructure.google.dto.response.*;
 import org.correos.app.addressvalidation.infrastructure.google.util.NextActionMessageResolver;
@@ -53,7 +54,7 @@ public class GoogleAddressMapper {
                 formatted,
                 locality,
                 postal,
-                nextActionCode,
+                action,
                 message,
                 "PREMISE".equalsIgnoreCase(granularity),
                 List.of(),

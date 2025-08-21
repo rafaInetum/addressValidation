@@ -6,7 +6,7 @@ public record ValidatedAddress(
         String formattedAddress,
         String locality,
         String postalCode,
-        String nextAction,
+        NextAction nextAction,
         String message,
         boolean isValid,
         List<String>suggestions,
@@ -35,7 +35,7 @@ public record ValidatedAddress(
                 ERROR_VALUE, // formattedAddress
                 ERROR_VALUE, // locality
                 ERROR_VALUE, // postalCode
-                ERROR_VALUE, // nextAction
+                null, // nextAction
                 message, // message
                 false,
                 null,

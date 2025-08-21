@@ -1,4 +1,4 @@
-package org.correos.app.addressvalidation.infrastructure.google.dto.response;
+package org.correos.app.addressvalidation.domain.model;
 
 public enum NextAction {
     ACCEPT, REVIEW, CONFIRM, FIX, UNKNOWN;
@@ -12,4 +12,3 @@ public enum NextAction {
         }
     }
 }
-
