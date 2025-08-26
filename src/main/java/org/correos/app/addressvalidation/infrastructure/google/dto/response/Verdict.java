@@ -9,5 +9,7 @@ public record Verdict(
         String geocodeGranularity,
         boolean isAddressComplete,
         boolean hasInferredComponents,
-        String possibleNextAction
+        String possibleNextAction,
+        Boolean hasUnconfirmedComponents,
+        Boolean hasReplacedComponents
 ) {}

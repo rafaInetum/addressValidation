@@ -1,3 +1,4 @@
+// Ubicación: domain.model
 package org.correos.app.addressvalidation.domain.model;
 
 import java.util.List;
@@ -9,8 +10,8 @@ public record ValidatedAddress(
         NextAction nextAction,
         String message,
         boolean isValid,
-        List<String>suggestions,
-        Coordinates coordinates,
+        List<String> suggestions,
+        GeocodeInfo geocode,
         AddressStatusCode status
 ) {
 
@@ -23,7 +24,21 @@ public record ValidatedAddress(
                 this.message,
                 this.isValid,
                 newSuggestions,
-                this.coordinates,
+                this.geocode,
+                this.status
+        );
+    }
+
+    public ValidatedAddress withGeocode(GeocodeInfo geocode) {
+        return new ValidatedAddress(
+                this.formattedAddress,
+                this.locality,
+                this.postalCode,
+                this.nextAction,
+                this.message,
+                this.isValid,
+                this.suggestions,
+                geocode,
                 this.status
         );
     }
@@ -32,16 +47,15 @@ public record ValidatedAddress(
 
     public static ValidatedAddress error(String message) {
         return new ValidatedAddress(
-                ERROR_VALUE, // formattedAddress
-                ERROR_VALUE, // locality
-                ERROR_VALUE, // postalCode
-                null, // nextAction
-                message, // message
+                ERROR_VALUE,
+                ERROR_VALUE,
+                ERROR_VALUE,
+                null,
+                message,
                 false,
                 null,
-                null,// geocode lat/long
+                null,
                 AddressStatusCode.VALIDATION_FAILED
         );
     }
-
 }

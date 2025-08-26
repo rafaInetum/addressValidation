@@ -10,3 +10,7 @@ google:
 spring:
   config:
     import: optional:classpath:application-local.yml
+
+geocode:
+  portal:
+    threshold: 85

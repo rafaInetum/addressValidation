@@ -1,11 +1,8 @@
 package org.correos.app.addressvalidation.infrastructure.google.mapper;
 
-import org.correos.app.addressvalidation.domain.model.AddressStatusCode;
-import org.correos.app.addressvalidation.domain.model.Coordinates;
-import org.correos.app.addressvalidation.domain.model.NextAction;
-import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
+import org.correos.app.addressvalidation.domain.model.*;
 import org.correos.app.addressvalidation.infrastructure.google.dto.response.*;
-import org.correos.app.addressvalidation.infrastructure.google.util.NextActionMessageResolver;
+import org.correos.app.addressvalidation.infrastructure.google.util.GoogleNextActionMessageResolver;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -47,8 +44,40 @@ public class GoogleAddressMapper {
 
         Coordinates coords = extractCoordinates(response);
 
+        // 1) Modalidad
+        GeocodeModality modality = switch (granularity) {
+            case "PREMISE", "SUB_PREMISE" -> GeocodeModality.PORTAL;
+            case "ROUTE" -> GeocodeModality.APROX_PORTAL;
+            default -> GeocodeModality.CALLE;
+        };
+
+        // 2) Fiabilidad (%)
+        int reliability = switch (modality) {
+            case PORTAL -> {
+                double meters = res.map(Result::geocode)
+                        .map(Geocode::featureSizeMeters)
+                        .orElse(50.0);
+                yield meters < 30.0 ? 95 : 85;
+            }
+            case APROX_PORTAL -> 85;
+            case CALLE -> 70;
+            case MANUAL_FIX -> 100;  // No se usará aquí en teoría, pero lo exige el switch
+        };
+
+        // 3) Ajuste si hay componentes no confirmados
+        boolean unconfirmed = res.map(Result::verdict)
+                .map(Verdict::hasUnconfirmedComponents)
+                .orElse(false);
+        if (unconfirmed) reliability = Math.max(0, reliability - 10);
+
         var action  = NextAction.fromString(nextActionCode);
-        var message = NextActionMessageResolver.resolve(action);
+        var message = GoogleNextActionMessageResolver.resolve(action);
+
+        // isValid = solo si modalidad es PORTAL y fiabilidad ≥ 85
+        boolean isValid = modality == GeocodeModality.PORTAL && reliability >= 85;
+
+        // Nuevo objeto centralizado
+        GeocodeInfo geocode = new GeocodeInfo(coords, modality, reliability, "GOOGLE");
 
         return new ValidatedAddress(
                 formatted,
@@ -56,20 +85,14 @@ public class GoogleAddressMapper {
                 postal,
                 action,
                 message,
-                "PREMISE".equalsIgnoreCase(granularity),
+                isValid,
                 List.of(),
-                coords,
+                geocode,
                 AddressStatusCode.SUCCESS
         );
     }
 
-    /**
-     * Devuelve Coordinates soportando dos variantes de Google:
-     * 1) location.latitude / location.longitude
-     * 2) location.latLng.latitude / location.latLng.longitude
-     */
     private Coordinates extractCoordinates(GoogleAddressResponse response) {
-
         // Variante 1: location con lat/lng directos
         var direct = opt(response)
                 .map(GoogleAddressResponse::result)
@@ -87,5 +110,7 @@ public class GoogleAddressMapper {
                 .orElse(null));
     }
 
-    private static <T> Optional<T> opt(T v) { return Optional.ofNullable(v); }
+    private static <T> Optional<T> opt(T v) {
+        return Optional.ofNullable(v);
+    }
 }

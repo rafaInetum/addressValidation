@@ -15,7 +15,7 @@ public class AddressDtoMapper {
     }
 
     public static RawAddressToValidate toModel(AddressRequestDto dto) {
-        return new RawAddressToValidate(dto.rawText(), dto.localeHint());
+        return new RawAddressToValidate(dto.rawText(), dto.localeHint(), dto.manuallyFixed());
     }
 
     public static ValidatedAddressResponseDto toDto(ValidatedAddress model) {

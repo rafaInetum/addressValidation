@@ -8,8 +8,11 @@ import org.correos.app.addressvalidation.application.port.out.AddressCompletionP
 import org.correos.app.addressvalidation.application.port.out.AddressValidationPort;
 import org.correos.app.addressvalidation.domain.model.NextAction;
 import org.correos.app.addressvalidation.domain.model.NormalizedAddress;
+import org.correos.app.addressvalidation.domain.model.RawAddress;
 import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
-import org.correos.app.addressvalidation.domain.service.AddressNormalizerService;
+import org.correos.app.addressvalidation.domain.addressnormalization.service.AddressNormalizer;
+import org.correos.app.addressvalidation.domain.addressnormalization.rule.GeocodeReliabilityAdjuster;
+import static org.correos.app.addressvalidation.application.mapper.RawAddressMapper.toDomain;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,16 +20,20 @@ import java.util.List;
 @Component
 public class ValidatedAddressService implements ValidateAddressUseCase {
 
-    private final AddressNormalizerService normalizer;
+    private final AddressNormalizer normalizer;
     private final AddressValidationPort addressValidator;
     private final AddressCompletionPort completionProvider;
+    private final GeocodeReliabilityAdjuster geocodeAdjuster;
 
-    public ValidatedAddressService(AddressNormalizerService normalizer,
+
+    public ValidatedAddressService(AddressNormalizer normalizer,
                                    AddressValidationPort addressValidator,
-                                   AddressCompletionPort completionProvider) {
+                                   AddressCompletionPort completionProvider,
+                                   GeocodeReliabilityAdjuster geocodeAdjuster) {
         this.normalizer = normalizer;
         this.addressValidator = addressValidator;
         this.completionProvider = completionProvider;
+        this.geocodeAdjuster = geocodeAdjuster;
     }
 
     @Override
@@ -36,21 +43,25 @@ public class ValidatedAddressService implements ValidateAddressUseCase {
                 .toList();
     }
 
-    private ValidatedAddress validate(RawAddressToValidate addressRaw) {
+    private ValidatedAddress validate(RawAddressToValidate rawAddress) {
 
         try {
-            validateAddressStructure(addressRaw);
+            validateAddressStructure(rawAddress);
 
             // Paso 1: normalizar
-            NormalizedAddress normalized = normalizer.normalize(addressRaw);
-
+            RawAddress rawAddressDomain = toDomain(rawAddress);
+            NormalizedAddress normalized = normalizer.normalize(rawAddressDomain);
+//
             // Paso 2: convertir a AddressToValidate estructurado
             AddressToValidate structured = NormalizedAddressToValidateMapper.toStructuredAddress(normalized);
 
             // Paso 3: validar usando proveedor (Google u otro)
             ValidatedAddress validated = addressValidator.requestValidation(structured);
 
-            // Paso 4: si no es ACCEPT, hacer sugerencias
+            // Paso 4: ajustar fiabilidad de geocodificación
+            validated = geocodeAdjuster.adjust(validated, rawAddress.manuallyFixed());
+
+            // Paso 5: si no es ACCEPT, busca sugerencias
             if (needsCompletion(validated)) {
                 List<String> suggestions = completionProvider.complete(structured);
                 validated = validated.withSuggestions(suggestions);
@@ -75,4 +86,7 @@ public class ValidatedAddressService implements ValidateAddressUseCase {
     private boolean needsCompletion(ValidatedAddress validated) {
         return validated.nextAction() != NextAction.ACCEPT;
     }
+
+
+
 }

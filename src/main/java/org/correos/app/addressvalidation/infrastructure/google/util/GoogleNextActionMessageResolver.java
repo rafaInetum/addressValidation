@@ -2,7 +2,7 @@ package org.correos.app.addressvalidation.infrastructure.google.util;
 
 import org.correos.app.addressvalidation.domain.model.NextAction;
 
-public class NextActionMessageResolver {
+public class GoogleNextActionMessageResolver {
 
     public static String resolve(NextAction action) {
         return switch (action) {

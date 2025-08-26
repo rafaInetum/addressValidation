@@ -4,5 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Geocode(
-        Location location
+        Location location,
+        Double featureSizeMeters,
+        String placeId
 ) {}

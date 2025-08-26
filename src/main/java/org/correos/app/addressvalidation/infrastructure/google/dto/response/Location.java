@@ -6,5 +6,5 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public record Location(
         double latitude,
         double longitude,
-        LatLng latLng // aquí modelas la variante anidada
+        LatLng latLng
 ) {}
