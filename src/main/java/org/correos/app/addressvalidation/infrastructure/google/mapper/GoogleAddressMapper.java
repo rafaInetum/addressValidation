@@ -2,7 +2,7 @@ package org.correos.app.addressvalidation.infrastructure.google.mapper;
 
 import org.correos.app.addressvalidation.domain.model.*;
 import org.correos.app.addressvalidation.infrastructure.google.dto.response.*;
-import org.correos.app.addressvalidation.infrastructure.google.util.GoogleNextActionMessageResolver;
+import org.correos.app.addressvalidation.infrastructure.google.mapper.logic.*;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,106 +11,104 @@ import java.util.Optional;
 @Component
 public class GoogleAddressMapper {
 
-    public ValidatedAddress toDomain(GoogleAddressResponse response) {
+    private final GoogleComponentReader compReader;
+    private final GoogleFormattedAddressBuilder formattedBuilder;
+    private final CountryNormalizer countryNormalizer;
+    private final GoogleModalityResolver modalityResolver;
+    private final CoordinatesExtractor coordinatesExtractor;
+    private final ReliabilityCalculator reliabilityCalculator;
+    private final NextActionDecider nextActionDecider;
+    private final StringUtil stringUtil;
 
-        var res = opt(response).map(GoogleAddressResponse::result);
+    public GoogleAddressMapper(GoogleComponentReader compReader,
+                               GoogleFormattedAddressBuilder formattedBuilder,
+                               CountryNormalizer countryNormalizer,
+                               GoogleModalityResolver modalityResolver,
+                               CoordinatesExtractor coordinatesExtractor,
+                               ReliabilityCalculator reliabilityCalculator,
+                               NextActionDecider nextActionDecider,
+                               StringUtil stringUtil) {
+        this.compReader = compReader;
+        this.formattedBuilder = formattedBuilder;
+        this.countryNormalizer = countryNormalizer;
+        this.modalityResolver = modalityResolver;
+        this.coordinatesExtractor = coordinatesExtractor;
+        this.reliabilityCalculator = reliabilityCalculator;
+        this.nextActionDecider = nextActionDecider;
+        this.stringUtil = stringUtil;
+    }
 
-        var formatted = res
+    /**
+     * Combina NormalizedAddress con la respuesta de Google.
+     * - Tipo/Nombre/Número: SIEMPRE desde lo normalizado (n).
+     * - CP/Localidad/País/coords/veredicto: desde Google con fallback a n.
+     */
+    public ValidatedAddress toDomain(GoogleAddressResponse response, NormalizedAddress n) {
+        var res = Optional.ofNullable(response).map(GoogleAddressResponse::result);
+        Result result = res.orElse(null);
+
+        // ---- Componentes oficiales de Google (con fallback a postalAddress y a lo normalizado) ----
+        String postalFromG   = compReader.findComponentText(result, "POSTAL_CODE");
+        String localityFromG = stringUtil.prefer(
+                compReader.findComponentText(result, "LOCALITY"),
+                compReader.findComponentText(result, "POSTAL_TOWN")
+        );
+
+        String countryFromG  = stringUtil.prefer(
+                compReader.findComponentText(result, "COUNTRY"),
+                Optional.ofNullable(result)
+                        .map(Result::address)
+                        .map(Address::postalAddress)
+                        .map(PostalAddress::regionCode)
+                        .orElse(null)
+        );
+
+        String cpFinal   = stringUtil.prefer(postalFromG,   n.codigoPostal());
+        String locFinal  = stringUtil.prefer(localityFromG, n.localidad());
+        String paisFinal = countryNormalizer.normalizeCountry(stringUtil.prefer(countryFromG, n.pais()));
+
+        // formatted preferible de Google; si falta, se construye con lo normalizado
+        String formatted = Optional.ofNullable(result)
                 .map(Result::address)
                 .map(Address::formattedAddress)
-                .orElse(null);
+                .orElse(formattedBuilder.buildFormatted(n));
 
-        String locality = res
-                .map(Result::address)
-                .map(Address::postalAddress)
-                .map(PostalAddress::locality)
-                .orElse(null);
+        // ---- Granularidad → modalidad ----
+        GeocodeModality modality = modalityResolver.resolve(result);
 
-        String postal = res
-                .map(Result::address)
-                .map(Address::postalAddress)
-                .map(PostalAddress::postalCode)
-                .orElse(null);
+        // Coordenadas
+        Coordinates coords = coordinatesExtractor.extract(response);
 
-        String nextActionCode = res
+        // Fiabilidad (incluyendo penalización por unconfirmed)
+        int reliability = reliabilityCalculator.calculate(result, modality);
+
+        String nextActionCode = Optional.ofNullable(result)
                 .map(Result::verdict)
                 .map(Verdict::possibleNextAction)
                 .orElse(null);
 
-        String granularity = res
-                .map(Result::verdict)
-                .map(Verdict::validationGranularity)
-                .orElse(null);
+        // Regla de aceptación: portal claro + CP + localidad (misma que tenías)
+        NextActionDecider.Outcome outcome = nextActionDecider.decide(
+                modality, reliability, cpFinal, locFinal, nextActionCode
+        );
 
-        Coordinates coords = extractCoordinates(response);
-
-        // 1) Modalidad
-        GeocodeModality modality = switch (granularity) {
-            case "PREMISE", "SUB_PREMISE" -> GeocodeModality.PORTAL;
-            case "ROUTE" -> GeocodeModality.APROX_PORTAL;
-            default -> GeocodeModality.CALLE;
-        };
-
-        // 2) Fiabilidad (%)
-        int reliability = switch (modality) {
-            case PORTAL -> {
-                double meters = res.map(Result::geocode)
-                        .map(Geocode::featureSizeMeters)
-                        .orElse(50.0);
-                yield meters < 30.0 ? 95 : 85;
-            }
-            case APROX_PORTAL -> 85;
-            case CALLE -> 70;
-            case MANUAL_FIX -> 100;  // No se usará aquí en teoría, pero lo exige el switch
-        };
-
-        // 3) Ajuste si hay componentes no confirmados
-        boolean unconfirmed = res.map(Result::verdict)
-                .map(Verdict::hasUnconfirmedComponents)
-                .orElse(false);
-        if (unconfirmed) reliability = Math.max(0, reliability - 10);
-
-        var action  = NextAction.fromString(nextActionCode);
-        var message = GoogleNextActionMessageResolver.resolve(action);
-
-        // isValid = solo si modalidad es PORTAL y fiabilidad ≥ 85
-        boolean isValid = modality == GeocodeModality.PORTAL && reliability >= 85;
-
-        // Nuevo objeto centralizado
         GeocodeInfo geocode = new GeocodeInfo(coords, modality, reliability, "GOOGLE");
 
+        // ---- Devolver ValidatedAddress (misma construcción/orden de campos) ----
         return new ValidatedAddress(
                 formatted,
-                locality,
-                postal,
-                action,
-                message,
-                isValid,
-                List.of(),
+                locFinal,          // locality
+                cpFinal,           // postalCode
+                outcome.action(),
+                outcome.message(),
+                outcome.isValid(),
+                List.of(),         // si generas sugerencias, rellénalas en el adaptador
                 geocode,
-                AddressStatusCode.SUCCESS
+                AddressStatusCode.SUCCESS,
+                n.tipoVia(),       // streetType (normalizador)
+                n.nombreVia(),     // streetName (normalizador)
+                n.numero(),        // streetNumber (normalizador)
+                paisFinal          // country (Google → fallback normalizado → normalizado a "España/ES")
         );
-    }
-
-    private Coordinates extractCoordinates(GoogleAddressResponse response) {
-        // Variante 1: location con lat/lng directos
-        var direct = opt(response)
-                .map(GoogleAddressResponse::result)
-                .map(Result::geocode)
-                .map(Geocode::location)
-                .map(loc -> new Coordinates(loc.latitude(), loc.longitude()));
-
-        // Variante 2: location.latLng con lat/lng
-        return direct.orElseGet(() -> opt(response)
-                .map(GoogleAddressResponse::result)
-                .map(Result::geocode)
-                .map(Geocode::location)
-                .map(Location::latLng)
-                .map(latLng -> new Coordinates(latLng.latitude(), latLng.longitude()))
-                .orElse(null));
-    }
-
-    private static <T> Optional<T> opt(T v) {
-        return Optional.ofNullable(v);
     }
 }

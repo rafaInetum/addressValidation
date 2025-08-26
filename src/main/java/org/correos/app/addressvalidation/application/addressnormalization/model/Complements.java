@@ -1,4 +1,4 @@
-package org.correos.app.addressvalidation.domain.addressnormalization.model;
+package org.correos.app.addressvalidation.application.addressnormalization.model;
 
 import java.util.Map;
 

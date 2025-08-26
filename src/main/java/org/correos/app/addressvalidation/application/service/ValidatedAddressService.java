@@ -10,8 +10,8 @@ import org.correos.app.addressvalidation.domain.model.NextAction;
 import org.correos.app.addressvalidation.domain.model.NormalizedAddress;
 import org.correos.app.addressvalidation.domain.model.RawAddress;
 import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
-import org.correos.app.addressvalidation.domain.addressnormalization.service.AddressNormalizer;
-import org.correos.app.addressvalidation.domain.addressnormalization.rule.GeocodeReliabilityAdjuster;
+import org.correos.app.addressvalidation.application.addressnormalization.service.AddressNormalizer;
+import org.correos.app.addressvalidation.application.addressnormalization.rule.GeocodeReliabilityAdjuster;
 import static org.correos.app.addressvalidation.application.mapper.RawAddressMapper.toDomain;
 import org.springframework.stereotype.Component;
 
@@ -51,19 +51,26 @@ public class ValidatedAddressService implements ValidateAddressUseCase {
             // Paso 1: normalizar
             RawAddress rawAddressDomain = toDomain(rawAddress);
             NormalizedAddress normalized = normalizer.normalize(rawAddressDomain);
-//
+
             // Paso 2: convertir a AddressToValidate estructurado
-            AddressToValidate structured = NormalizedAddressToValidateMapper.toStructuredAddress(normalized);
+            AddressToValidate addr = NormalizedAddressToValidateMapper.toStructuredAddress(normalized);
+
+//            AddressToValidate addr = new AddressToValidate(
+//                    "ES",                                 // regionCode si lo sabes (usa hint)
+//                    null,                                  // locality (lo dejará Google)
+//                    null,                                  // postalCode
+//                    List.of(rawAddress.rawText().trim())   // addressLines: texto tal cual
+//            );
 
             // Paso 3: validar usando proveedor (Google u otro)
-            ValidatedAddress validated = addressValidator.requestValidation(structured);
+            ValidatedAddress validated = addressValidator.requestValidation(addr, normalized);
 
             // Paso 4: ajustar fiabilidad de geocodificación
             validated = geocodeAdjuster.adjust(validated, rawAddress.manuallyFixed());
 
             // Paso 5: si no es ACCEPT, busca sugerencias
             if (needsCompletion(validated)) {
-                List<String> suggestions = completionProvider.complete(structured);
+                List<String> suggestions = completionProvider.complete(addr);
                 validated = validated.withSuggestions(suggestions);
             }
             return validated;

@@ -1,4 +1,4 @@
-package org.correos.app.addressvalidation.domain.addressnormalization.rule;
+package org.correos.app.addressvalidation.application.addressnormalization.rule;
 
 import org.correos.app.addressvalidation.domain.model.*;
 import org.springframework.beans.factory.annotation.Value;

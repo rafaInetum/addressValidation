@@ -1,8 +1,8 @@
-package org.correos.app.addressvalidation.domain.addressnormalization.scorer;
+package org.correos.app.addressvalidation.application.addressnormalization.scorer;
 
-import org.correos.app.addressvalidation.domain.addressnormalization.model.CityParts;
-import org.correos.app.addressvalidation.domain.addressnormalization.model.Complements;
-import org.correos.app.addressvalidation.domain.addressnormalization.model.StreetParts;
+import org.correos.app.addressvalidation.application.addressnormalization.model.CityParts;
+import org.correos.app.addressvalidation.application.addressnormalization.model.StreetParts;
+import org.correos.app.addressvalidation.application.addressnormalization.model.Complements;
 import org.springframework.stereotype.Component;
 
 @Component

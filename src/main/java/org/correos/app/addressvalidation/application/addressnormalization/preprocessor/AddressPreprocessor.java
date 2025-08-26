@@ -1,9 +1,9 @@
-package org.correos.app.addressvalidation.domain.addressnormalization.preprocessor;
+package org.correos.app.addressvalidation.application.addressnormalization.preprocessor;
 
-import org.correos.app.addressvalidation.domain.addressnormalization.model.Lexicon;
-import org.correos.app.addressvalidation.domain.addressnormalization.model.LocaleISO;
-import org.correos.app.addressvalidation.domain.addressnormalization.model.PreprocessedAddress;
-import org.correos.app.addressvalidation.domain.addressnormalization.config.LexiconProvider;
+import org.correos.app.addressvalidation.application.addressnormalization.config.LexiconProvider;
+import org.correos.app.addressvalidation.application.addressnormalization.model.Lexicon;
+import org.correos.app.addressvalidation.application.addressnormalization.model.PreprocessedAddress;
+import org.correos.app.addressvalidation.application.addressnormalization.model.LocaleISO;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

@@ -1,6 +1,7 @@
 package org.correos.app.addressvalidation.infrastructure.google.client;
 
 import org.correos.app.addressvalidation.application.model.AddressToValidate;
+import org.correos.app.addressvalidation.domain.model.NormalizedAddress;
 import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleAddressValidationProps;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleApiProps;
@@ -35,7 +36,7 @@ public class GoogleAddressValidationClient {
         this.mapper = mapper;
     }
 
-    public ValidatedAddress requestValidation(AddressToValidate address) {
+    public ValidatedAddress requestValidation(AddressToValidate address, NormalizedAddress normalized) {
 
         AddressInput googleAddress = toGoogleInput(address);
 
@@ -50,7 +51,7 @@ public class GoogleAddressValidationClient {
             GoogleAddressResponse body = Optional.ofNullable(response.getBody())
                     .orElseThrow(() -> new RuntimeException("Respuesta vacía de Google Address Validation"));
 
-            return mapToValidatedAddress(body);
+            return mapToValidatedAddress(body, normalized);
 
         } catch (RestClientResponseException e) {
             String msg = "Error HTTP llamando a Google Address Validation: status=%d body=%s"
@@ -86,7 +87,7 @@ public class GoogleAddressValidationClient {
         return new HttpEntity<>(jsonBody, headers);
     }
 
-    private ValidatedAddress mapToValidatedAddress(GoogleAddressResponse response) {
-        return mapper.toDomain(response);
+    private ValidatedAddress mapToValidatedAddress(GoogleAddressResponse response,NormalizedAddress normalized) {
+        return mapper.toDomain(response,normalized );
     }
 }

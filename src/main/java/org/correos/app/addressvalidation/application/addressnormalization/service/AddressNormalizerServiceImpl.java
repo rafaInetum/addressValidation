@@ -1,14 +1,14 @@
-package org.correos.app.addressvalidation.domain.addressnormalization.service;
+package org.correos.app.addressvalidation.application.addressnormalization.service;
 
-import org.correos.app.addressvalidation.domain.addressnormalization.extractors.CityExtractor;
-import org.correos.app.addressvalidation.domain.addressnormalization.extractors.ComplementsExtractor;
-import org.correos.app.addressvalidation.domain.addressnormalization.extractors.StreetExtractor;
-import org.correos.app.addressvalidation.domain.addressnormalization.model.*;
-import org.correos.app.addressvalidation.domain.addressnormalization.preprocessor.AddressPreprocessor;
-import org.correos.app.addressvalidation.domain.addressnormalization.rule.NumberNormalizer;
-import org.correos.app.addressvalidation.domain.addressnormalization.scorer.AddressScorer;
+import org.correos.app.addressvalidation.application.addressnormalization.extractors.CityExtractor;
+import org.correos.app.addressvalidation.application.addressnormalization.extractors.ComplementsExtractor;
+import org.correos.app.addressvalidation.application.addressnormalization.model.*;
+import org.correos.app.addressvalidation.application.addressnormalization.extractors.StreetExtractor;
+import org.correos.app.addressvalidation.application.addressnormalization.preprocessor.AddressPreprocessor;
+import org.correos.app.addressvalidation.application.addressnormalization.rule.NumberNormalizer;
+import org.correos.app.addressvalidation.application.addressnormalization.scorer.AddressScorer;
 import org.correos.app.addressvalidation.domain.model.*;
-import org.correos.app.addressvalidation.domain.addressnormalization.utils.AddressUtils;
+import org.correos.app.addressvalidation.application.addressnormalization.utils.AddressUtils;
 import org.springframework.stereotype.Service;
 
 
@@ -57,10 +57,9 @@ public class AddressNormalizerServiceImpl implements AddressNormalizer {
 
         String numeroVia = numberNormalizer.normalize(street.numero(), locale);
         String planta = numberNormalizer.normalizeFloor(complements.planta(), locale);
+
         String puerta = numberNormalizer.normalizeDoor(complements.puerta());
-
         CityParts city = cityExtractor.extract(expanded, cp, country);
-
         double confidence = addressScorer.calculateScore(street, cp, city, country, complements);
 
         return new NormalizedAddress(

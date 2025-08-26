@@ -1,7 +1,7 @@
-package org.correos.app.addressvalidation.domain.addressnormalization.config;
+package org.correos.app.addressvalidation.application.addressnormalization.config;
 
-import org.correos.app.addressvalidation.domain.addressnormalization.model.Lexicon;
-import org.correos.app.addressvalidation.domain.addressnormalization.model.LocaleISO;
+import org.correos.app.addressvalidation.application.addressnormalization.model.Lexicon;
+import org.correos.app.addressvalidation.application.addressnormalization.model.LocaleISO;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

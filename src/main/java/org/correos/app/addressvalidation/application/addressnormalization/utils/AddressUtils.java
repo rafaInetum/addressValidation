@@ -1,6 +1,6 @@
-package org.correos.app.addressvalidation.domain.addressnormalization.utils;
+package org.correos.app.addressvalidation.application.addressnormalization.utils;
 
-import org.correos.app.addressvalidation.domain.addressnormalization.model.LocaleISO;
+import org.correos.app.addressvalidation.application.addressnormalization.model.LocaleISO;
 
 import java.util.regex.Pattern;
 

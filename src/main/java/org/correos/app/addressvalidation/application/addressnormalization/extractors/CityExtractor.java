@@ -1,6 +1,6 @@
-package org.correos.app.addressvalidation.domain.addressnormalization.extractors;
+package org.correos.app.addressvalidation.application.addressnormalization.extractors;
 
-import org.correos.app.addressvalidation.domain.addressnormalization.model.CityParts;
+import org.correos.app.addressvalidation.application.addressnormalization.model.CityParts;
 import org.springframework.stereotype.Component;
 
 @Component

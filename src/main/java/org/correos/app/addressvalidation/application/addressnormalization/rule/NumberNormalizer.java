@@ -1,7 +1,7 @@
 // File: domain/service/helper/NumberNormalizer.java
-package org.correos.app.addressvalidation.domain.addressnormalization.rule;
+package org.correos.app.addressvalidation.application.addressnormalization.rule;
 
-import org.correos.app.addressvalidation.domain.addressnormalization.model.LocaleISO;
+import org.correos.app.addressvalidation.application.addressnormalization.model.LocaleISO;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
