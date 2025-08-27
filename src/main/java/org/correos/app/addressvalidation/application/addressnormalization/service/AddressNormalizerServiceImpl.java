@@ -55,7 +55,7 @@ public class AddressNormalizerServiceImpl implements AddressNormalizer {
         Complements complements = complementsExtractor.extract(expanded, locale);
         StreetParts street = streetExtractor.extract(expanded, lexicon);
 
-        String numeroVia = numberNormalizer.normalize(street.numero(), locale);
+        String numeroVia = numberNormalizer.normalize(street.number(), locale);
         String planta = numberNormalizer.normalizeFloor(complements.planta(), locale);
 
         String puerta = numberNormalizer.normalizeDoor(complements.puerta());
@@ -63,8 +63,8 @@ public class AddressNormalizerServiceImpl implements AddressNormalizer {
         double confidence = addressScorer.calculateScore(street, cp, city, country, complements);
 
         return new NormalizedAddress(
-                street.tipo(),
-                street.nombre(),
+                street.type(),
+                street.name(),
                 numeroVia,
                 planta,
                 puerta,

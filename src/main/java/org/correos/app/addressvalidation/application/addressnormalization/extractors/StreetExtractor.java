@@ -45,7 +45,7 @@ public class StreetExtractor {
             return new StreetParts(m2.group(2), trimName(m2.group(1)), m2.group(3));
         }
 
-        // 3) Solo tipo + nombre (sin número): "CALLE SANTA CRUZ DE MUDELA"
+        // 3) Solo type + name (sin número): "CALLE SANTA CRUZ DE MUDELA"
         Pattern p3 = Pattern.compile(
                 "\\b(" + tipos + ")\\b\\s+(" + NAME_CHARS + "+?)(?:\\s*,|$)",
                 Pattern.UNICODE_CASE | Pattern.UNICODE_CHARACTER_CLASS
@@ -55,14 +55,24 @@ public class StreetExtractor {
             return new StreetParts(m3.group(1), trimName(m3.group(2)), null);
         }
 
-        // 4) Fallback "Nombre, número"
+        // ✅ 4) Tipo al final sin número: "Jose Mardones Kalea"
         Pattern p4 = Pattern.compile(
-                "(" + NAME_CHARS + "+?)\\s*,\\s*(\\d+[\\p{L}\\p{N}]?)\\b",
+                "(" + NAME_CHARS + "+?)\\s+(" + tipos + ")\\b(?:\\s*,|$)",
                 Pattern.UNICODE_CASE | Pattern.UNICODE_CHARACTER_CLASS
         );
         Matcher m4 = p4.matcher(text);
         if (m4.find()) {
-            return new StreetParts(null, trimName(m4.group(1)), m4.group(2));
+            return new StreetParts(m4.group(2), trimName(m4.group(1)), null);
+        }
+
+        // 4) Fallback "Nombre, número"
+        Pattern p5 = Pattern.compile(
+                "(" + NAME_CHARS + "+?)\\s*,\\s*(\\d+[\\p{L}\\p{N}]?)\\b",
+                Pattern.UNICODE_CASE | Pattern.UNICODE_CHARACTER_CLASS
+        );
+        Matcher m5 = p5.matcher(text);
+        if (m5.find()) {
+            return new StreetParts(null, trimName(m5.group(1)), m5.group(2));
         }
 
         return new StreetParts(null, null, null);

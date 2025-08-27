@@ -12,7 +12,7 @@ public class NextActionDecider {
 
     /**
      * Mantiene exactamente la misma lógica:
-     * - strong si: modalidad PORTAL + reliability >= 85 + CP y localidad no vacíos
+     * - strong si: modalidad PORTAL + reliability >= 85 + CP y city no vacíos
      * - action/message a partir de strong o del possibleNextAction
      * - isValid = strong || (PORTAL && reliability >= 85)
      */

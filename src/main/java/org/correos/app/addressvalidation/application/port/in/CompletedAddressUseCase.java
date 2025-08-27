@@ -1,0 +1,9 @@
+package org.correos.app.addressvalidation.application.port.in;
+
+import org.correos.app.addressvalidation.application.model.AddressToValidate;
+
+import java.util.List;
+
+public interface CompletedAddressUseCase {
+    List<String> execute(AddressToValidate address);
+}

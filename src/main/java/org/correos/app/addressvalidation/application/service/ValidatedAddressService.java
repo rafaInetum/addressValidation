@@ -1,39 +1,45 @@
 package org.correos.app.addressvalidation.application.service;
 
+import org.correos.app.addressvalidation.application.addressnormalization.rule.GeocodeReliabilityAdjuster;
+import org.correos.app.addressvalidation.application.addressnormalization.service.AddressNormalizer;
 import org.correos.app.addressvalidation.application.mapper.NormalizedAddressToValidateMapper;
+import org.correos.app.addressvalidation.application.mapper.RawAddressMapper;
 import org.correos.app.addressvalidation.application.model.AddressToValidate;
 import org.correos.app.addressvalidation.application.model.RawAddressToValidate;
 import org.correos.app.addressvalidation.application.port.in.ValidateAddressUseCase;
-import org.correos.app.addressvalidation.application.port.out.AddressCompletionPort;
 import org.correos.app.addressvalidation.application.port.out.AddressValidationPort;
 import org.correos.app.addressvalidation.domain.model.NextAction;
 import org.correos.app.addressvalidation.domain.model.NormalizedAddress;
 import org.correos.app.addressvalidation.domain.model.RawAddress;
 import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
-import org.correos.app.addressvalidation.application.addressnormalization.service.AddressNormalizer;
-import org.correos.app.addressvalidation.application.addressnormalization.rule.GeocodeReliabilityAdjuster;
-import static org.correos.app.addressvalidation.application.mapper.RawAddressMapper.toDomain;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+
 
 @Component
 public class ValidatedAddressService implements ValidateAddressUseCase {
 
     private final AddressNormalizer normalizer;
     private final AddressValidationPort addressValidator;
-    private final AddressCompletionPort completionProvider;
+    private final CompletedAddressService completionProvider;
     private final GeocodeReliabilityAdjuster geocodeAdjuster;
+    private final RawAddressMapper rawAddressMapper;
+    private final NormalizedAddressToValidateMapper normalizedMapper;
 
 
     public ValidatedAddressService(AddressNormalizer normalizer,
                                    AddressValidationPort addressValidator,
-                                   AddressCompletionPort completionProvider,
-                                   GeocodeReliabilityAdjuster geocodeAdjuster) {
+                                   CompletedAddressService completionProvider,
+                                   GeocodeReliabilityAdjuster geocodeAdjuster,
+                                   RawAddressMapper rawAddressMapper,
+                                   NormalizedAddressToValidateMapper normalizedMapper) {
         this.normalizer = normalizer;
         this.addressValidator = addressValidator;
         this.completionProvider = completionProvider;
         this.geocodeAdjuster = geocodeAdjuster;
+        this.rawAddressMapper = rawAddressMapper;
+        this.normalizedMapper = normalizedMapper;
     }
 
     @Override
@@ -46,31 +52,28 @@ public class ValidatedAddressService implements ValidateAddressUseCase {
     private ValidatedAddress validate(RawAddressToValidate rawAddress) {
 
         try {
+
             validateAddressStructure(rawAddress);
 
             // Paso 1: normalizar
-            RawAddress rawAddressDomain = toDomain(rawAddress);
+            RawAddress rawAddressDomain = rawAddressMapper.toDomain(rawAddress);
+
             NormalizedAddress normalized = normalizer.normalize(rawAddressDomain);
 
-            // Paso 2: convertir a AddressToValidate estructurado
-            AddressToValidate addr = NormalizedAddressToValidateMapper.toStructuredAddress(normalized);
+            AddressToValidate atv = normalizedMapper.toStructuredAddress(normalized);
 
-//            AddressToValidate addr = new AddressToValidate(
-//                    "ES",                                 // regionCode si lo sabes (usa hint)
-//                    null,                                  // locality (lo dejará Google)
-//                    null,                                  // postalCode
-//                    List.of(rawAddress.rawText().trim())   // addressLines: texto tal cual
-//            );
+            // Paso 2: convertir a AddressToValidate estructurado
+            atv = applyFallbackIfNeeded(atv,rawAddress);
 
             // Paso 3: validar usando proveedor (Google u otro)
-            ValidatedAddress validated = addressValidator.requestValidation(addr, normalized);
+            ValidatedAddress validated = addressValidator.requestValidation(atv, normalized);
 
             // Paso 4: ajustar fiabilidad de geocodificación
             validated = geocodeAdjuster.adjust(validated, rawAddress.manuallyFixed());
 
             // Paso 5: si no es ACCEPT, busca sugerencias
             if (needsCompletion(validated)) {
-                List<String> suggestions = completionProvider.complete(addr);
+                List<String> suggestions = completionProvider.execute(atv);
                 validated = validated.withSuggestions(suggestions);
             }
             return validated;
@@ -92,6 +95,24 @@ public class ValidatedAddressService implements ValidateAddressUseCase {
 
     private boolean needsCompletion(ValidatedAddress validated) {
         return validated.nextAction() != NextAction.ACCEPT;
+    }
+
+    private AddressToValidate applyFallbackIfNeeded(AddressToValidate structured, RawAddressToValidate raw) {
+        if (/*isFallbackRequired(structured)*/true) {
+            return new AddressToValidate(
+                    raw.localeHint() != null ? raw.localeHint() : "ES",
+                    null,
+                    null,
+                    List.of(raw.rawText().trim())
+            );
+        }
+        return structured;
+    }
+
+    private boolean isFallbackRequired(AddressToValidate addr) {
+        return (addr.regionCode() == null || addr.regionCode().isBlank()) &&
+                (addr.city() == null || addr.city().isBlank()) &&
+                (addr.postalCode() == null || addr.postalCode().isBlank());
     }
 
 

@@ -65,7 +65,7 @@ public class GoogleAddressValidationClient {
     private AddressInput toGoogleInput(AddressToValidate input) {
         return new AddressInput(
                 input.regionCode(),
-                input.locality(),
+                input.city(),
                 input.postalCode(),
                 input.addressLines()
         );

@@ -11,11 +11,11 @@ public class AddressScorer {
     public double calculateScore(StreetParts street, String postalCode, CityParts city, String country, Complements complements) {
         double score = 0.0;
 
-        if (street.nombre() != null && !street.nombre().isBlank()) {
+        if (street.name() != null && !street.name().isBlank()) {
             score += 0.3;
         }
 
-        boolean hasNumber = street.numero() != null && !street.numero().isBlank();
+        boolean hasNumber = street.number() != null && !street.number().isBlank();
         boolean hasSN = complements.extras().getOrDefault("sn", "false").equalsIgnoreCase("true");
         if (hasNumber || hasSN) {
             score += 0.25;

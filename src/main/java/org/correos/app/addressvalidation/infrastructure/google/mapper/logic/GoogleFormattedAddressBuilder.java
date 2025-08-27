@@ -15,9 +15,9 @@ public class GoogleFormattedAddressBuilder {
     /** Formatea una dirección legible con lo normalizado (idéntico a tu buildFormatted). */
     public String buildFormatted(NormalizedAddress n) {
         return stringUtil.join(", ",
-                stringUtil.join(" ", stringUtil.join(" ", n.tipoVia(), n.nombreVia()), n.numero()),
-                stringUtil.join(" ", n.codigoPostal(), n.localidad()),
-                n.pais()
+                stringUtil.join(" ", stringUtil.join(" ", n.streetType(), n.streetName()), n.streetNumber()),
+                stringUtil.join(" ", n.postalCode(), n.city()),
+                n.country()
         );
     }
 }
