@@ -5,9 +5,10 @@ import org.correos.app.addressvalidation.domain.model.NormalizedAddress;
 import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleAddressValidationProps;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleApiProps;
-import org.correos.app.addressvalidation.infrastructure.google.dto.request.AddressInput;
+import org.correos.app.addressvalidation.infrastructure.google.dto.request.AddressValidationInputForGoogle;
 import org.correos.app.addressvalidation.infrastructure.google.dto.response.GoogleAddressResponse;
-import org.correos.app.addressvalidation.infrastructure.google.mapper.GoogleAddressMapper;
+import org.correos.app.addressvalidation.infrastructure.google.mapper.GoogleAddressRequestMapper;
+import org.correos.app.addressvalidation.infrastructure.google.mapper.response.GoogleAddressResponseMapper;
 import org.correos.app.addressvalidation.infrastructure.google.util.GoogleAddressRequestBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -24,21 +25,26 @@ public class GoogleAddressValidationClient {
     private final RestTemplate restTemplate;
     private final GoogleAddressValidationProps googleAddressValidationProps;
     private final GoogleApiProps googleApiProps;
-    private final GoogleAddressMapper mapper;
+    private final GoogleAddressResponseMapper mapper;
+    private final GoogleAddressRequestMapper googleAddressRequestMapper;
+
 
     public GoogleAddressValidationClient(RestTemplate googleRestTemplate,
                                          GoogleAddressValidationProps props,
                                          GoogleApiProps googleApiProps,
-                                         GoogleAddressMapper mapper) {
+                                         GoogleAddressResponseMapper mapper,
+                                         GoogleAddressRequestMapper googleAddressRequestMapper) {
         this.restTemplate = googleRestTemplate;
         this.googleAddressValidationProps = props;
         this.googleApiProps = googleApiProps;
         this.mapper = mapper;
+        this.googleAddressRequestMapper = googleAddressRequestMapper;
+
     }
 
     public ValidatedAddress requestValidation(AddressToValidate address, NormalizedAddress normalized) {
 
-        AddressInput googleAddress = toGoogleInput(address);
+        AddressValidationInputForGoogle googleAddress = toGoogleInput(address);
 
         try {
             ResponseEntity<GoogleAddressResponse> response = restTemplate.exchange(
@@ -62,13 +68,8 @@ public class GoogleAddressValidationClient {
         }
     }
 
-    private AddressInput toGoogleInput(AddressToValidate input) {
-        return new AddressInput(
-                input.regionCode(),
-                input.city(),
-                input.postalCode(),
-                input.addressLines()
-        );
+    private AddressValidationInputForGoogle toGoogleInput(AddressToValidate input) {
+        return googleAddressRequestMapper.toGoogleInput(input);
     }
 
     private String buildUrl() {
@@ -79,7 +80,7 @@ public class GoogleAddressValidationClient {
                 .toUriString();
     }
 
-    private HttpEntity<String> buildRequest(AddressInput address) {
+    private HttpEntity<String> buildRequest(AddressValidationInputForGoogle address) {
         String jsonBody = GoogleAddressRequestBuilder.buildJsonRequest(address);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -88,6 +89,6 @@ public class GoogleAddressValidationClient {
     }
 
     private ValidatedAddress mapToValidatedAddress(GoogleAddressResponse response,NormalizedAddress normalized) {
-        return mapper.toDomain(response,normalized );
+        return mapper.toDomain(response,normalized);
     }
 }

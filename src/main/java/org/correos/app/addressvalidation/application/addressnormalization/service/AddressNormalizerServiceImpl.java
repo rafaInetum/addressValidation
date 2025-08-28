@@ -7,6 +7,7 @@ import org.correos.app.addressvalidation.application.addressnormalization.extrac
 import org.correos.app.addressvalidation.application.addressnormalization.preprocessor.AddressPreprocessor;
 import org.correos.app.addressvalidation.application.addressnormalization.rule.NumberNormalizer;
 import org.correos.app.addressvalidation.application.addressnormalization.scorer.AddressScorer;
+import org.correos.app.addressvalidation.application.model.AddressValidationInput;
 import org.correos.app.addressvalidation.domain.model.*;
 import org.correos.app.addressvalidation.application.addressnormalization.utils.AddressUtils;
 import org.springframework.stereotype.Service;
@@ -39,8 +40,8 @@ public class AddressNormalizerServiceImpl implements AddressNormalizer {
     }
 
     @Override
-    public NormalizedAddress normalize(RawAddress input) {
-        String raw = input.rawText() == null ? "" : input.rawText().trim();
+    public NormalizedAddress normalize(AddressValidationInput input) {
+        String raw = input.addressPlainText() == null ? "" : input.addressPlainText().trim();
         if (raw.isEmpty()) return empty("ES");
 
         PreprocessedAddress pre = preprocessor.preprocess(raw, input.localeHint());

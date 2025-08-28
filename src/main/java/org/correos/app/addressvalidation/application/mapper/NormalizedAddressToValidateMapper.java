@@ -15,6 +15,6 @@ public interface NormalizedAddressToValidateMapper {
 
     @Mapping(source = "country", target = "regionCode", qualifiedByName = "normalizeRegionCode")
     @Mapping(source = ".", target = "addressLines", qualifiedByName = "buildAddressLines")
-    @Mapping(source = "city", target = "city")
+    @Mapping(source = "locality", target = "locality")
     AddressToValidate toStructuredAddress(NormalizedAddress n);
 }

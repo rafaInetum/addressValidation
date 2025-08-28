@@ -1,7 +1,6 @@
 package org.correos.app.addressvalidation.application.port.out;
 
 import org.correos.app.addressvalidation.application.model.AddressToValidate;
-import org.correos.app.addressvalidation.infrastructure.google.dto.request.AddressInput;
 
 import java.util.List;
 

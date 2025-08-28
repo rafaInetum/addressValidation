@@ -9,7 +9,7 @@ public record NormalizedAddress(
         String floor,
         String door,
         String postalCode,
-        String city,
+        String locality,
         String province,
         String country,
         String notes,

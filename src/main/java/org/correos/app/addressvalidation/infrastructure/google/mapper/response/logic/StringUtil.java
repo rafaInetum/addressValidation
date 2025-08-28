@@ -1,4 +1,4 @@
-package org.correos.app.addressvalidation.infrastructure.google.mapper.logic;
+package org.correos.app.addressvalidation.infrastructure.google.mapper.response.logic;
 
 import org.springframework.stereotype.Component;
 

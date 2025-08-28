@@ -1,4 +1,4 @@
-package org.correos.app.addressvalidation.infrastructure.google.mapper.logic;
+package org.correos.app.addressvalidation.infrastructure.google.mapper.response.logic;
 
 import org.correos.app.addressvalidation.domain.model.GeocodeModality;
 import org.correos.app.addressvalidation.domain.model.NextAction;
@@ -12,7 +12,7 @@ public class NextActionDecider {
 
     /**
      * Mantiene exactamente la misma lógica:
-     * - strong si: modalidad PORTAL + reliability >= 85 + CP y city no vacíos
+     * - strong si: modalidad PORTAL + reliability >= 85 + CP y locality no vacíos
      * - action/message a partir de strong o del possibleNextAction
      * - isValid = strong || (PORTAL && reliability >= 85)
      */

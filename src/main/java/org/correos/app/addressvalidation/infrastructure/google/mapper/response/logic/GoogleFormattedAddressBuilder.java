@@ -1,4 +1,4 @@
-package org.correos.app.addressvalidation.infrastructure.google.mapper.logic;
+package org.correos.app.addressvalidation.infrastructure.google.mapper.response.logic;
 
 import org.correos.app.addressvalidation.domain.model.NormalizedAddress;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ public class GoogleFormattedAddressBuilder {
     public String buildFormatted(NormalizedAddress n) {
         return stringUtil.join(", ",
                 stringUtil.join(" ", stringUtil.join(" ", n.streetType(), n.streetName()), n.streetNumber()),
-                stringUtil.join(" ", n.postalCode(), n.city()),
+                stringUtil.join(" ", n.postalCode(), n.locality()),
                 n.country()
         );
     }

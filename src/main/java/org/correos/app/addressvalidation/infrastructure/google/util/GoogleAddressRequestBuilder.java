@@ -1,12 +1,12 @@
 package org.correos.app.addressvalidation.infrastructure.google.util;
 
-import org.correos.app.addressvalidation.infrastructure.google.dto.request.AddressInput;
+import org.correos.app.addressvalidation.infrastructure.google.dto.request.AddressValidationInputForGoogle;
 
 import java.util.List;
 
 public class GoogleAddressRequestBuilder {
 
-    public static String buildJsonRequest(AddressInput addressInput) {
+    public static String buildJsonRequest(AddressValidationInputForGoogle addressInput) {
         return """
     {
       "address": {

@@ -4,7 +4,7 @@ import java.util.List;
 
 public record AddressToValidate(
         String regionCode,
-        String city,
+        String locality,
         String postalCode,
         List<String> addressLines
 ) {}

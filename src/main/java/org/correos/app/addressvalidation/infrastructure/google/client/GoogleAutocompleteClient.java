@@ -34,7 +34,7 @@ public class GoogleAutocompleteClient {
 
     public List<String> searchPlaceIds(AddressToValidate address) {
         String rawInput = String.join(" ", address.addressLines()) +
-                " " + address.city() +
+                " " + address.locality() +
                 " " + address.postalCode();
         return searchPlaceIds(rawInput);
     }

@@ -1,4 +1,4 @@
-package org.correos.app.addressvalidation.infrastructure.google.mapper;
+package org.correos.app.addressvalidation.infrastructure.google.mapper.response;
 
 import org.correos.app.addressvalidation.application.addressnormalization.extractors.StreetExtractor;
 import org.correos.app.addressvalidation.application.addressnormalization.model.LocaleISO;
@@ -7,14 +7,14 @@ import org.correos.app.addressvalidation.application.addressnormalization.model.
 import org.correos.app.addressvalidation.application.addressnormalization.preprocessor.AddressPreprocessor;
 import org.correos.app.addressvalidation.domain.model.*;
 import org.correos.app.addressvalidation.infrastructure.google.dto.response.*;
-import org.correos.app.addressvalidation.infrastructure.google.mapper.logic.*;
+import org.correos.app.addressvalidation.infrastructure.google.mapper.response.logic.*;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
 @Component
-public class GoogleAddressMapper {
+public class GoogleAddressResponseMapper {
 
     private final GoogleComponentReader componentReader;
     private final GoogleFormattedAddressBuilder formattedAddressBuilder;
@@ -27,16 +27,16 @@ public class GoogleAddressMapper {
     private final StreetExtractor streetExtractor;
     private final AddressPreprocessor preprocessor;
 
-    public GoogleAddressMapper(GoogleComponentReader componentReader,
-                               GoogleFormattedAddressBuilder formattedAddressBuilder,
-                               CountryNormalizer countryNormalizer,
-                               GoogleModalityResolver modalityResolver,
-                               CoordinatesExtractor coordinatesExtractor,
-                               ReliabilityCalculator reliabilityCalculator,
-                               NextActionDecider nextActionDecider,
-                               StringUtil stringUtil,
-                               StreetExtractor streetExtractor,
-                               AddressPreprocessor preprocessor
+    public GoogleAddressResponseMapper(GoogleComponentReader componentReader,
+                                       GoogleFormattedAddressBuilder formattedAddressBuilder,
+                                       CountryNormalizer countryNormalizer,
+                                       GoogleModalityResolver modalityResolver,
+                                       CoordinatesExtractor coordinatesExtractor,
+                                       ReliabilityCalculator reliabilityCalculator,
+                                       NextActionDecider nextActionDecider,
+                                       StringUtil stringUtil,
+                                       StreetExtractor streetExtractor,
+                                       AddressPreprocessor preprocessor
     ) {
         this.componentReader = componentReader;
         this.formattedAddressBuilder = formattedAddressBuilder;
@@ -81,7 +81,7 @@ public class GoogleAddressMapper {
         );
 
         String finalPostalCode = stringUtil.prefer(postalCodeFromGoogle, normalizedAddress.postalCode());
-        String finalCity = stringUtil.prefer(localityFromGoogle, normalizedAddress.city());
+        String finalCity = stringUtil.prefer(localityFromGoogle, normalizedAddress.locality());
         String finalProvince = stringUtil.prefer(provinceFromGoogle, normalizedAddress.province());
         String finalCountry = countryNormalizer.normalizeCountry(stringUtil.prefer(countryFromGoogle, normalizedAddress.country()));
 
