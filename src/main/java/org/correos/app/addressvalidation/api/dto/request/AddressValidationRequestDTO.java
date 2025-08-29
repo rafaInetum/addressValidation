@@ -3,7 +3,7 @@ package org.correos.app.addressvalidation.api.dto.request;
 /**
  * DTO que representa una dirección a validar.
  */
-public record AddressValidationRequestDto(
+public record AddressValidationRequestDTO(
 
         /** Código único del envío  */
         String codEnvio,

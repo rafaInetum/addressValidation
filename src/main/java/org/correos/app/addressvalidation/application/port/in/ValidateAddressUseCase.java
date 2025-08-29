@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ValidateAddressUseCase {
     List<ValidatedAddress> execute(List<AddressValidationInput> addresses);
+    ValidatedAddress execute(AddressValidationInput addresses);
 }

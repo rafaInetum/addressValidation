@@ -59,7 +59,7 @@ public class GoogleAddressResponseMapper {
         var res = Optional.ofNullable(response).map(GoogleAddressResponse::result);
         Result result = res.orElse(null);
 
-        // Google components (fallback to NormalizedAddress if needed)
+        // Componentes de Google (usar NormalizedAddress como alternativa si hace falta)
         String postalCodeFromGoogle = componentReader.findComponentText(result, "POSTAL_CODE");
         String localityFromGoogle = stringUtil.prefer(
                 componentReader.findComponentText(result, "LOCALITY"),
@@ -85,11 +85,11 @@ public class GoogleAddressResponseMapper {
         String finalProvince = stringUtil.prefer(provinceFromGoogle, normalizedAddress.province());
         String finalCountry = countryNormalizer.normalizeCountry(stringUtil.prefer(countryFromGoogle, normalizedAddress.country()));
 
-        // Fallback for street type/name/number
+        // Recurso de respaldo para el tipo/nombre/número de la calle
         String streetFromGoogle = componentReader.findComponentText(result, "ROUTE");
         String numberFromGoogle = componentReader.findComponentText(result, "STREET_NUMBER");
 
-        String finalStreetType = normalizedAddress.streetType();              // Google no separa type; lo inferimos si falta
+        String finalStreetType = normalizedAddress.streetType();  // Recurso de respaldo para el tipo/nombre/número de la calle
         String finalStreetName = stringUtil.prefer(normalizedAddress.streetName(), streetFromGoogle);
         String finalStreetNumber = stringUtil.prefer(normalizedAddress.streetNumber(), numberFromGoogle);
 

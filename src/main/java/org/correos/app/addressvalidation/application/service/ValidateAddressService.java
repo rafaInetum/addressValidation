@@ -16,20 +16,20 @@ import java.util.List;
 
 
 @Component
-public class ValidatedAddressService implements ValidateAddressUseCase {
+public class ValidateAddressService implements ValidateAddressUseCase {
 
     private final AddressNormalizer normalizer;
     private final AddressValidationPort addressValidator;
-    private final CompletedAddressService completionProvider;
+    private final CompleteAddressService completionProvider;
     private final GeocodeReliabilityAdjuster geocodeAdjuster;
     private final NormalizedAddressToValidateMapper normalizedMapper;
 
 
-    public ValidatedAddressService(AddressNormalizer normalizer,
-                                   AddressValidationPort addressValidator,
-                                   CompletedAddressService completionProvider,
-                                   GeocodeReliabilityAdjuster geocodeAdjuster,
-                                   NormalizedAddressToValidateMapper normalizedMapper) {
+    public ValidateAddressService(AddressNormalizer normalizer,
+                                  AddressValidationPort addressValidator,
+                                  CompleteAddressService completionProvider,
+                                  GeocodeReliabilityAdjuster geocodeAdjuster,
+                                  NormalizedAddressToValidateMapper normalizedMapper) {
         this.normalizer = normalizer;
         this.addressValidator = addressValidator;
         this.completionProvider = completionProvider;
@@ -42,6 +42,11 @@ public class ValidatedAddressService implements ValidateAddressUseCase {
         return input.stream()
                 .map(this::validate)
                 .toList();
+    }
+
+    @Override
+    public ValidatedAddress execute(AddressValidationInput input) {
+        return validate(input);
     }
 
     private ValidatedAddress validate(AddressValidationInput input) {
@@ -64,7 +69,7 @@ public class ValidatedAddressService implements ValidateAddressUseCase {
 
             /* Paso 5: si no es ACCEPT, busca sugerencias */
             if (needsCompletion(validated)) {
-                List<String> suggestions = completionProvider.execute(atv);
+                List<String> suggestions = completionProvider.findSuggestions(atv);
                 validated = validated.withSuggestions(suggestions);
             }
             return validated;

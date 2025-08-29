@@ -4,6 +4,6 @@ import org.correos.app.addressvalidation.application.model.AddressToValidate;
 
 import java.util.List;
 
-public interface CompletedAddressUseCase {
-    List<String> execute(AddressToValidate address);
+public interface CompleteAddressUseCase {
+    List<String> findSuggestions(AddressToValidate address);
 }

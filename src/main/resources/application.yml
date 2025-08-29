@@ -11,10 +11,10 @@ google:
   details:
     base-url: https://maps.googleapis.com/maps/api/place/details/json
 
-spring:
-  config:
-    import: optional:classpath:application-local.yml
-
 geocode:
   portal:
     threshold: 85
+
+spring:
+  config:
+    import: optional:classpath:application-local.yml
