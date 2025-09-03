@@ -1,5 +1,6 @@
 package org.correos.app.addressvalidation.application.addressnormalization.service;
 
+import lombok.RequiredArgsConstructor;
 import org.correos.app.addressvalidation.application.addressnormalization.extractors.CityExtractor;
 import org.correos.app.addressvalidation.application.addressnormalization.extractors.ComplementsExtractor;
 import org.correos.app.addressvalidation.application.addressnormalization.model.*;
@@ -13,6 +14,7 @@ import org.correos.app.addressvalidation.application.addressnormalization.utils.
 import org.springframework.stereotype.Service;
 
 
+@RequiredArgsConstructor
 @Service
 public class AddressNormalizerServiceImpl implements AddressNormalizer {
 
@@ -23,22 +25,9 @@ public class AddressNormalizerServiceImpl implements AddressNormalizer {
     private final AddressScorer addressScorer;
     private final NumberNormalizer numberNormalizer;
 
-    public AddressNormalizerServiceImpl(
-            AddressPreprocessor preprocessor,
-            ComplementsExtractor complementsExtractor,
-            StreetExtractor streetExtractor,
-            CityExtractor cityExtractor,
-            AddressScorer addressScorer,
-            NumberNormalizer numberNormalizer
-    ) {
-        this.preprocessor = preprocessor;
-        this.complementsExtractor = complementsExtractor;
-        this.streetExtractor = streetExtractor;
-        this.cityExtractor = cityExtractor;
-        this.addressScorer = addressScorer;
-        this.numberNormalizer = numberNormalizer;
-    }
-
+    /* =========================
+        Main methods
+        ========================= */
     @Override
     public NormalizedAddress normalize(AddressValidationInput input) {
         String raw = input.addressPlainText() == null ? "" : input.addressPlainText().trim();
