@@ -17,7 +17,7 @@ public record AddressValidationRequestDTO(
         /** Si ha sido corregida manualmente por un operador */
         boolean manuallyFixed,
 
-        /** Código del sistema origen (ej. 1=ORION, 2=CORELAT...) */
+        /** Código del sistema origen (ej. 1=ORION) */
         int codSistemaOrigen
 
 ) {}

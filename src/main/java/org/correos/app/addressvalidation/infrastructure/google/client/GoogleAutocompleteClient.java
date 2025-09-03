@@ -61,5 +61,10 @@ public class GoogleAutocompleteClient {
         } catch (Exception e) {
             throw new RuntimeException("Error al obtener placeIds : " + e.getMessage(), e);
         }
+
+    }
+
+    public List<String> searchSuggestions(String addressText) {
+        return searchPlaceIds(addressText);
     }
 }

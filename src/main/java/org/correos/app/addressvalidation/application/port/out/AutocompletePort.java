@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface AutocompletePort {
     List<String> fetchPlaceIds(AddressToValidate input);
+    List<String> findSuggestions(String address);
 }

@@ -1,5 +1,6 @@
 package org.correos.app.addressvalidation.application.service;
 
+import lombok.RequiredArgsConstructor;
 import org.correos.app.addressvalidation.application.addressnormalization.rule.GeocodeReliabilityAdjuster;
 import org.correos.app.addressvalidation.application.addressnormalization.service.AddressNormalizer;
 import org.correos.app.addressvalidation.application.mapper.NormalizedAddressToValidateMapper;
@@ -14,9 +15,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-
+@RequiredArgsConstructor
 @Component
 public class ValidateAddressService implements ValidateAddressUseCase {
+
+    private static final String DEFAULT_REGION = "ES";
 
     private final AddressNormalizer normalizer;
     private final AddressValidationPort addressValidator;
@@ -24,90 +27,79 @@ public class ValidateAddressService implements ValidateAddressUseCase {
     private final GeocodeReliabilityAdjuster geocodeAdjuster;
     private final NormalizedAddressToValidateMapper normalizedMapper;
 
+/* =========================
+       Main methods
+       ========================= */
 
-    public ValidateAddressService(AddressNormalizer normalizer,
-                                  AddressValidationPort addressValidator,
-                                  CompleteAddressService completionProvider,
-                                  GeocodeReliabilityAdjuster geocodeAdjuster,
-                                  NormalizedAddressToValidateMapper normalizedMapper) {
-        this.normalizer = normalizer;
-        this.addressValidator = addressValidator;
-        this.completionProvider = completionProvider;
-        this.geocodeAdjuster = geocodeAdjuster;
-        this.normalizedMapper = normalizedMapper;
+    @Override
+    public List<ValidatedAddress> validate(List<AddressValidationInput> input) {
+        if (input == null || input.isEmpty()) return List.of();
+        return input.stream().map(this::processAddress).toList();
     }
 
     @Override
-    public List<ValidatedAddress> execute(List<AddressValidationInput> input) {
-        return input.stream()
-                .map(this::validate)
-                .toList();
-    }
-
-    @Override
-    public ValidatedAddress execute(AddressValidationInput input) {
-        return validate(input);
-    }
-
-    private ValidatedAddress validate(AddressValidationInput input) {
+    public ValidatedAddress processAddress(AddressValidationInput input) {
+        if (isBlank(input)) {
+            return ValidatedAddress.error("El campo 'addressPlainText' no puede estar vacío");
+        }
         try {
-
-            validateAddressStructure(input);
-
-            /* Paso 1: normalizar */
+            // 1) Normalizar
             NormalizedAddress normalized = normalizer.normalize(input);
 
-            /* Paso 2: convertir a AddressToValidate estructurado */
-            AddressToValidate atv = normalizedMapper.toStructuredAddress(normalized);
-            atv = applyFallbackIfNeeded(atv,input); // En caso de llegar sin estructura, usar texto plano
-
-            /* Paso 3: validar usando proveedor (Google u otro) */
-            ValidatedAddress validated = addressValidator.requestValidation(atv, normalized);
-
-            /* Paso 4: ajustar fiabilidad de geocodificación */
-            validated = geocodeAdjuster.adjust(validated, input.manuallyFixed());
-
-            /* Paso 5: si no es ACCEPT, busca sugerencias */
-            if (needsCompletion(validated)) {
-                List<String> suggestions = completionProvider.findSuggestions(atv);
-                validated = validated.withSuggestions(suggestions);
+            // 2) Mapear o caer a fallback si no hay estructura mínima
+            AddressToValidate toValidate = normalizedMapper.toStructuredAddress(normalized);
+            if (requiresFallback(toValidate)) {
+                toValidate = fallbackFrom(input);
             }
-            return validated;
+
+            // 3) Validar con proveedor
+            ValidatedAddress validated = addressValidator.requestValidation(toValidate, normalized);
+
+            // 4) Ajustar fiabilidad de geocodificación
+            validated = geocodeAdjuster.adjust(validated, Boolean.TRUE.equals(input.manuallyFixed()));
+
+            // 5) Añadir sugerencias si no es ACCEPT
+            return requiresCompletion(validated)
+                    ? validated.withSuggestions(safeSuggestions(toValidate))
+                    : validated;
 
         } catch (Exception e) {
             return ValidatedAddress.error("Error al procesar la dirección: " + e.getMessage());
         }
     }
 
-    private void validateAddressStructure(AddressValidationInput address) {
-        boolean invalid = address == null ||
-                address.addressPlainText() == null ||
-                address.addressPlainText().isBlank();
+    /* =========================
+       Helpers methods
+       ========================= */
 
-        if (invalid) {
-            throw new IllegalArgumentException("El campo 'addressPlainText' no puede estar vacío");
+    private boolean isBlank(AddressValidationInput input) {
+        return input == null || input.addressPlainText() == null || input.addressPlainText().isBlank();
+    }
+
+    private boolean requiresFallback(AddressToValidate a) {
+        if (a == null) return true;
+        return isEmpty(a.regionCode()) && isEmpty(a.locality()) && isEmpty(a.postalCode());
+    }
+
+    private boolean isEmpty(String s) {
+        return s == null || s.isBlank();
+    }
+
+    private AddressToValidate fallbackFrom(AddressValidationInput raw) {
+        String region = isEmpty(raw.localeHint()) ? DEFAULT_REGION : raw.localeHint().trim();
+        return new AddressToValidate(region, null, null, List.of(raw.addressPlainText().trim()));
+    }
+
+    private boolean requiresCompletion(ValidatedAddress v) {
+        return v != null && v.nextAction() != NextAction.ACCEPT;
+    }
+
+    private List<String> safeSuggestions(AddressToValidate toValidate) {
+        try {
+            List<String> s = completionProvider.execute(toValidate);
+            return (s == null) ? List.of() : s;
+        } catch (Exception ignored) {
+            return List.of();
         }
-    }
-
-    private AddressToValidate applyFallbackIfNeeded(AddressToValidate structured, AddressValidationInput raw) {
-        if (isFallbackRequired(structured)) {
-            return new AddressToValidate(
-                    raw.localeHint() != null ? raw.localeHint() : "ES",
-                    null,
-                    null,
-                    List.of(raw.addressPlainText().trim())
-            );
-        }
-        return structured;
-    }
-
-    private boolean isFallbackRequired(AddressToValidate addr) {
-        return (addr.regionCode() == null || addr.regionCode().isBlank()) &&
-                (addr.locality() == null || addr.locality().isBlank()) &&
-                (addr.postalCode() == null || addr.postalCode().isBlank());
-    }
-
-    private boolean needsCompletion(ValidatedAddress validated) {
-        return validated.nextAction() != NextAction.ACCEPT;
     }
 }

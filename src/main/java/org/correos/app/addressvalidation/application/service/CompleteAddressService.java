@@ -23,9 +23,15 @@ public class CompleteAddressService implements CompleteAddressUseCase {
         this.placeDetails = placeDetails;
     }
 
-    public List<String> findSuggestions(AddressToValidate address) {
+    public List<String> execute(AddressToValidate address) {
         List<String> placeIds = autocomplete.fetchPlaceIds(address);
         return placeDetails.getDetailedPlaces(placeIds);
+    }
+
+    @Override
+    public List<String> execute(String address) {
+        List<String> suggestedAddressesIds = autocomplete.findSuggestions(address);
+        return placeDetails.getDetailedPlaces(suggestedAddressesIds);
     }
 
 }

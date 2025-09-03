@@ -24,4 +24,9 @@ public class GoogleAutocompleteAdapter implements AutocompletePort {
         return client.searchPlaceIds(input);
     }
 
+    @Override
+    public List<String> findSuggestions(String address) {
+        return client.searchSuggestions(address);
+    }
+
 }

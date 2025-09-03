@@ -6,6 +6,6 @@ import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
 import java.util.List;
 
 public interface ValidateAddressUseCase {
-    List<ValidatedAddress> execute(List<AddressValidationInput> addresses);
-    ValidatedAddress execute(AddressValidationInput addresses);
+    List<ValidatedAddress> validate(List<AddressValidationInput> addresses);
+    ValidatedAddress processAddress(AddressValidationInput addresses);
 }
