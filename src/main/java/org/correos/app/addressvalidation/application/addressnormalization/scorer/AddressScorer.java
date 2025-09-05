@@ -16,7 +16,7 @@ public class AddressScorer {
         }
 
         boolean hasNumber = street.number() != null && !street.number().isBlank();
-        boolean hasSN = complements.extras().getOrDefault("sn", "false").equalsIgnoreCase("true");
+        boolean hasSN = complements.complementAddress().getOrDefault("sn", "false").equalsIgnoreCase("true");
         if (hasNumber || hasSN) {
             score += 0.25;
         }
@@ -25,7 +25,7 @@ public class AddressScorer {
             score += 0.2;
         }
 
-        if (city.localidad() != null && !city.localidad().isBlank()) {
+        if (city.locality() != null && !city.locality().isBlank()) {
             score += 0.15;
         }
 

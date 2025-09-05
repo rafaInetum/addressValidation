@@ -1,16 +1,18 @@
-package org.correos.app.addressvalidation.infrastructure.google.mapper;
+package org.correos.app.addressvalidation.infrastructure.google.mapper.request;
 
+import lombok.RequiredArgsConstructor;
 import org.correos.app.addressvalidation.application.model.AddressToValidate;
-import org.correos.app.addressvalidation.infrastructure.google.dto.request.AddressValidationInputForGoogle;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.correos.app.addressvalidation.infrastructure.google.dto.request.GoogleAddressBody;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface GoogleAddressRequestMapper {
+import java.util.List;
 
-    @Mapping(target = "regionCode", source = "regionCode")
-    @Mapping(target = "locality", source = "locality")
-    @Mapping(target = "postalCode", source = "postalCode")
-    @Mapping(target = "addressLines", source = "addressLines")
-    AddressValidationInputForGoogle toGoogleInput(AddressToValidate address);
+@RequiredArgsConstructor
+@Component
+public final class GoogleAddressRequestMapper {
+
+    public GoogleAddressBody toGoogleInput(AddressToValidate address) {
+        if (address == null) return null;
+        return new GoogleAddressBody(List.of(address.originalAddress()));
+    }
 }

@@ -1,6 +1,6 @@
-package org.correos.app.addressvalidation.api.mapper;
+package org.correos.app.addressvalidation.infrastructure.api.mapper;
 
-import org.correos.app.addressvalidation.api.dto.request.AddressValidationRequestDTO;
+import org.correos.app.addressvalidation.infrastructure.api.dto.request.AddressValidationRequestDTO;
 import org.correos.app.addressvalidation.application.model.AddressValidationInput;
 import org.mapstruct.Mapper;
 

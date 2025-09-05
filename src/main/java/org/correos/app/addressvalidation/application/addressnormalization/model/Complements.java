@@ -5,6 +5,6 @@ import java.util.Map;
 public record Complements(
         String planta,
         String puerta,
-        Map<String, String> extras,
+        Map<String, String> complementAddress,
         String observaciones
 ) {}

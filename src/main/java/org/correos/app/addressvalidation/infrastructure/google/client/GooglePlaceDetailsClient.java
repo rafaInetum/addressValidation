@@ -2,6 +2,7 @@ package org.correos.app.addressvalidation.infrastructure.google.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleApiProps;
 import org.correos.app.addressvalidation.infrastructure.google.config.GooglePlaceDetailsProps;
@@ -14,6 +15,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.List;
 import java.util.Objects;
 
+@RequiredArgsConstructor
 @Component
 @Slf4j
 public class GooglePlaceDetailsClient {
@@ -23,16 +25,6 @@ public class GooglePlaceDetailsClient {
     private final GooglePlaceDetailsProps googlePlaceDetailsProps;
     private final GoogleApiProps googleApiProps;
 
-    public GooglePlaceDetailsClient(
-            RestTemplate restTemplate,
-            ObjectMapper mapper,
-            GooglePlaceDetailsProps googlePlaceDetailsProps,
-            GoogleApiProps googleApiProps) {
-        this.restTemplate = restTemplate;
-        this.mapper = mapper;
-        this.googlePlaceDetailsProps = googlePlaceDetailsProps;
-        this.googleApiProps = googleApiProps;
-    }
 
     public List<String> fetchFormattedAddresses(List<String> placeIds) {
         return placeIds.stream()

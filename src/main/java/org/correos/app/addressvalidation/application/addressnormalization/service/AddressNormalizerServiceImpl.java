@@ -1,27 +1,30 @@
 package org.correos.app.addressvalidation.application.addressnormalization.service;
 
 import lombok.RequiredArgsConstructor;
-import org.correos.app.addressvalidation.application.addressnormalization.extractors.CityExtractor;
+//import org.correos.app.addressvalidation.application.addressnormalization.extractors.CityExtractor;
 import org.correos.app.addressvalidation.application.addressnormalization.extractors.ComplementsExtractor;
-import org.correos.app.addressvalidation.application.addressnormalization.model.*;
 import org.correos.app.addressvalidation.application.addressnormalization.extractors.StreetExtractor;
-import org.correos.app.addressvalidation.application.addressnormalization.preprocessor.AddressPreprocessor;
+import org.correos.app.addressvalidation.application.addressnormalization.model.*;
+import org.correos.app.addressvalidation.application.addressnormalization.preprocessor.AddressPreNormalizer;
 import org.correos.app.addressvalidation.application.addressnormalization.rule.NumberNormalizer;
 import org.correos.app.addressvalidation.application.addressnormalization.scorer.AddressScorer;
-import org.correos.app.addressvalidation.application.model.AddressValidationInput;
-import org.correos.app.addressvalidation.domain.model.*;
-import org.correos.app.addressvalidation.application.addressnormalization.utils.AddressUtils;
+import org.correos.app.addressvalidation.domain.model.NormalizedAddress;
+import org.correos.app.addressvalidation.domain.model.ValidatedAddress;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @RequiredArgsConstructor
 @Service
 public class AddressNormalizerServiceImpl implements AddressNormalizer {
 
-    private final AddressPreprocessor preprocessor;
+    private final AddressPreNormalizer preprocessor;
     private final ComplementsExtractor complementsExtractor;
     private final StreetExtractor streetExtractor;
-    private final CityExtractor cityExtractor;
     private final AddressScorer addressScorer;
     private final NumberNormalizer numberNormalizer;
 
@@ -29,50 +32,73 @@ public class AddressNormalizerServiceImpl implements AddressNormalizer {
         Main methods
         ========================= */
     @Override
-    public NormalizedAddress normalize(AddressValidationInput input) {
-        String raw = input.addressPlainText() == null ? "" : input.addressPlainText().trim();
-        if (raw.isEmpty()) return empty("ES");
+    public NormalizedAddress normalize(ValidatedAddress validated) {
 
-        PreprocessedAddress pre = preprocessor.preprocess(raw, input.localeHint());
+        // === Guard 0) Entrada nula o vacía
+        if (validated == null || validated.formattedAddress() == null || validated.formattedAddress().trim().isEmpty()) {
+            return empty("ES");
+        }
+
+        // === 0) Preproceso / normalización básica
+        PreNormalizedAddress pre = preprocessor.preProcess(validated);
 
         String expanded = pre.normalizedText();
         LocaleISO locale = pre.locale();
         Lexicon lexicon = pre.lexicon();
 
-        String cp = AddressUtils.matchFirst(lexicon.cpPattern(), expanded);
-        String country = AddressUtils.detectCountry(expanded, locale);
+        // === 1) Señales básicas (CP, país, provincia, localidad
+        String cp = pre.postalCode();
+        String country = pre.country();
+        String province = pre.province();
+        String locality = pre.locality();
+        CityParts cityParts = new CityParts(cp, locality, province);
 
-        Complements complements = complementsExtractor.extract(expanded, locale);
-        StreetParts street = streetExtractor.extract(expanded, lexicon);
+        // === 2) Extractores principales (complementos y calle)
+        Complements complements = complementsExtractor.extract(pre.addressComplements(), locale);
 
+        // === 3) Extraer tipo/nombre/número de vía
+        String plainStreetParts = Stream.of(pre.streetName(), pre.streetNumber())
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.joining(" "));
+
+        StreetParts street = streetExtractor.extract(plainStreetParts, lexicon);
+
+        // === 4) Normalizadores de número / planta / puerta
         String numeroVia = numberNormalizer.normalize(street.number(), locale);
-        String planta = numberNormalizer.normalizeFloor(complements.planta(), locale);
+        String floor = numberNormalizer.normalizeFloor(complements.planta(), locale);
+        String door = numberNormalizer.normalizeDoor(complements.puerta());
 
-        String puerta = numberNormalizer.normalizeDoor(complements.puerta());
-        CityParts city = cityExtractor.extract(expanded, cp, country);
-        double confidence = addressScorer.calculateScore(street, cp, city, country, complements);
+        // === 5) Scoring
+        double confidence = addressScorer.calculateScore(street, cp, cityParts, country, complements);
+
+        List<String> addressLines =  List.of(expanded);
 
         return new NormalizedAddress(
+                validated.formattedAddress(),
+                validated.originalAddress(),
                 street.type(),
                 street.name(),
                 numeroVia,
-                planta,
-                puerta,
+                floor,
+                door,
                 cp,
-                city.localidad(),
-                city.provincia(),
+                locality,
+                province,
                 country,
                 complements.observaciones(),
-                complements.extras(),
+                complements.complementAddress(),
                 confidence,
-                locale.name()
+                locale.name(),
+                addressLines
         );
     }
 
+    /* =========================
+        Helpers
+        ========================= */
     private NormalizedAddress empty(String locale) {
-        return new NormalizedAddress(
-                null, null, null, null, null, null,
-                null, null, null, null, java.util.Map.of(), 0.0, locale
-        );
+        return NormalizedAddress.empty("ES");
     }
 }

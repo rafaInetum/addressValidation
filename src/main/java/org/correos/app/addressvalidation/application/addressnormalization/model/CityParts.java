@@ -1,6 +1,7 @@
 package org.correos.app.addressvalidation.application.addressnormalization.model;
 
 public record CityParts(
-        String localidad,
-        String provincia
+        String country,
+        String locality,
+        String province
 ) {}

@@ -6,7 +6,7 @@ public record AddressValidationInput(
         String codEnvio,
 
         /* Dirección en texto plano */
-        String addressPlainText,
+        String originalAddress,
 
         /* Hint de idioma/localización: "es", "pt", etc. */
         String localeHint,

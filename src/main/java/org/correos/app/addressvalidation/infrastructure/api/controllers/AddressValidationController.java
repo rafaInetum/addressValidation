@@ -1,9 +1,9 @@
-package org.correos.app.addressvalidation.api.controllers;
+package org.correos.app.addressvalidation.infrastructure.api.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.correos.app.addressvalidation.api.dto.request.AddressValidationRequestDTO;
-import org.correos.app.addressvalidation.api.mapper.AddressRequestMapper;
-import org.correos.app.addressvalidation.api.mapper.AddressResponseMapper;
+import org.correos.app.addressvalidation.infrastructure.api.dto.request.AddressValidationRequestDTO;
+import org.correos.app.addressvalidation.infrastructure.api.mapper.AddressRequestMapper;
+import org.correos.app.addressvalidation.infrastructure.api.mapper.AddressResponseMapper;
 import org.correos.app.addressvalidation.application.model.AddressValidationInput;
 import org.correos.app.addressvalidation.application.port.in.CompleteAddressUseCase;
 import org.correos.app.addressvalidation.application.port.in.ValidateAddressUseCase;
@@ -54,23 +54,6 @@ public class AddressValidationController {
         return ResponseEntity.ok(completeAddressUseCase.execute(q.trim()));
     }
 
-    /**
-     * POST /v1/addresses/addressConfirmation
-     * normaliza y persiste UNA única dirección, por tratamiendo manual del cliente.
-     *
-     * Body: JSON con un AddressValidationRequestDTO.
-     * Devuelve: 200 OK con ValidatedAddressResponseDTO.
-     *
-     */
-    @PostMapping("/addressConfirmation")
-    public ResponseEntity<?> confirmAddress(
-            @RequestBody AddressValidationRequestDTO input,
-            @PathVariable long id) {
-
-        AddressValidationInput toValidate = addressRequestMapper.toModel(input);
-        ValidatedAddress results = validateAddressUseCase.processAddress(toValidate);
-        return ResponseEntity.ok(addressResponseMapper.toDTO(results));
-    }
 
     /**
      * Geolocalización (Point) del recurso concreto.
@@ -88,6 +71,14 @@ public class AddressValidationController {
                         "id", id
                 ));
     }
+
+
+
+
+
+
+
+
 
     /**
      * Confirma el refinamiento manual por posición y persiste la geolocalización.
@@ -110,6 +101,25 @@ public class AddressValidationController {
                         "id", id,
                         "received", Map.of("lat", lat, "lon", lon, "addressFormatted", addressFormatted)
                 ));
+    }
+
+
+    /**
+     * POST /v1/addresses/addressConfirmation
+     * normaliza y persiste UNA única dirección, por tratamiendo manual del cliente.
+     *
+     * Body: JSON con un AddressValidationRequestDTO.
+     * Devuelve: 200 OK con ValidatedAddressResponseDTO.
+     *
+     */
+    @PostMapping("/addressConfirmation")
+    public ResponseEntity<?> confirmAddress(
+            @RequestBody AddressValidationRequestDTO input,
+            @PathVariable long id) {
+
+        AddressValidationInput toValidate = addressRequestMapper.toModel(input);
+        ValidatedAddress results = validateAddressUseCase.processAddress(toValidate);
+        return ResponseEntity.ok(addressResponseMapper.toDTO(results));
     }
 
     /**

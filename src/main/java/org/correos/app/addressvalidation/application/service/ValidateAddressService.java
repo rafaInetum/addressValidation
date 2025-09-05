@@ -3,7 +3,7 @@ package org.correos.app.addressvalidation.application.service;
 import lombok.RequiredArgsConstructor;
 import org.correos.app.addressvalidation.application.addressnormalization.rule.GeocodeReliabilityAdjuster;
 import org.correos.app.addressvalidation.application.addressnormalization.service.AddressNormalizer;
-import org.correos.app.addressvalidation.application.mapper.NormalizedAddressToValidateMapper;
+import org.correos.app.addressvalidation.application.mapper.AddressToValidateBuilder;
 import org.correos.app.addressvalidation.application.model.AddressToValidate;
 import org.correos.app.addressvalidation.application.model.AddressValidationInput;
 import org.correos.app.addressvalidation.application.port.in.ValidateAddressUseCase;
@@ -19,13 +19,12 @@ import java.util.List;
 @Component
 public class ValidateAddressService implements ValidateAddressUseCase {
 
-    private static final String DEFAULT_REGION = "ES";
 
     private final AddressNormalizer normalizer;
     private final AddressValidationPort addressValidator;
     private final CompleteAddressService completionProvider;
     private final GeocodeReliabilityAdjuster geocodeAdjuster;
-    private final NormalizedAddressToValidateMapper normalizedMapper;
+    private final AddressToValidateBuilder normalizedMapper;
 
 /* =========================
        Main methods
@@ -40,23 +39,21 @@ public class ValidateAddressService implements ValidateAddressUseCase {
     @Override
     public ValidatedAddress processAddress(AddressValidationInput input) {
         if (isBlank(input)) {
-            return ValidatedAddress.error("El campo 'addressPlainText' no puede estar vacío");
+            return ValidatedAddress.error("El campo 'originalAddress' no puede estar vacío");
         }
         try {
-            // 1) Normalizar
-            NormalizedAddress normalized = normalizer.normalize(input);
 
-            // 2) Mapear o caer a fallback si no hay estructura mínima
-            AddressToValidate toValidate = normalizedMapper.toStructuredAddress(normalized);
-            if (requiresFallback(toValidate)) {
-                toValidate = fallbackFrom(input);
-            }
+            // 1) Construye el AddressToValidate
+            AddressToValidate toValidate = normalizedMapper.buildAddressToValidate(input);
 
-            // 3) Validar con proveedor
-            ValidatedAddress validated = addressValidator.requestValidation(toValidate, normalized);
+            // 2) Validar con proveedor
+            ValidatedAddress validated = addressValidator.requestValidation(toValidate);
 
-            // 4) Ajustar fiabilidad de geocodificación
+            // 3) Ajustar fiabilidad de geocodificación
             validated = geocodeAdjuster.adjust(validated, Boolean.TRUE.equals(input.manuallyFixed()));
+
+            // 4) Normalizar
+            NormalizedAddress normalized = normalizer.normalize(validated);
 
             // 5) Añadir sugerencias si no es ACCEPT
             return requiresCompletion(validated)
@@ -66,28 +63,6 @@ public class ValidateAddressService implements ValidateAddressUseCase {
         } catch (Exception e) {
             return ValidatedAddress.error("Error al procesar la dirección: " + e.getMessage());
         }
-    }
-
-    /* =========================
-       Helpers methods
-       ========================= */
-
-    private boolean isBlank(AddressValidationInput input) {
-        return input == null || input.addressPlainText() == null || input.addressPlainText().isBlank();
-    }
-
-    private boolean requiresFallback(AddressToValidate a) {
-        if (a == null) return true;
-        return isEmpty(a.regionCode()) && isEmpty(a.locality()) && isEmpty(a.postalCode());
-    }
-
-    private boolean isEmpty(String s) {
-        return s == null || s.isBlank();
-    }
-
-    private AddressToValidate fallbackFrom(AddressValidationInput raw) {
-        String region = isEmpty(raw.localeHint()) ? DEFAULT_REGION : raw.localeHint().trim();
-        return new AddressToValidate(region, null, null, List.of(raw.addressPlainText().trim()));
     }
 
     private boolean requiresCompletion(ValidatedAddress v) {
@@ -102,4 +77,13 @@ public class ValidateAddressService implements ValidateAddressUseCase {
             return List.of();
         }
     }
+
+    /* =========================
+       Helpers methods
+       ========================= */
+
+    private boolean isBlank(AddressValidationInput input) {
+        return input == null || input.originalAddress() == null || input.originalAddress().isBlank();
+    }
+
 }

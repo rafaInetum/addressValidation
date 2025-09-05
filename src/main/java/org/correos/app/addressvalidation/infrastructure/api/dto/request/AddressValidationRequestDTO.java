@@ -1,4 +1,4 @@
-package org.correos.app.addressvalidation.api.dto.request;
+package org.correos.app.addressvalidation.infrastructure.api.dto.request;
 
 /**
  * DTO que representa una dirección a validar.
@@ -9,7 +9,7 @@ public record AddressValidationRequestDTO(
         String codEnvio,
 
         /** Dirección en texto plano */
-        String addressPlainText,
+        String originalAddress,
 
         /** Hint de idioma/localización: "es", "pt", etc. */
         String localeHint,

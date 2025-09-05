@@ -1,25 +1,19 @@
 package org.correos.app.addressvalidation.infrastructure.google.util;
 
-import org.correos.app.addressvalidation.infrastructure.google.dto.request.AddressValidationInputForGoogle;
+import org.correos.app.addressvalidation.infrastructure.google.dto.request.GoogleAddressBody;
 
 import java.util.List;
 
 public class GoogleAddressRequestBuilder {
 
-    public static String buildJsonRequest(AddressValidationInputForGoogle addressInput) {
+    public static String buildJsonRequest(GoogleAddressBody addressInput) {
         return """
     {
       "address": {
-        "regionCode": "%s",
-        "locality": "%s",
-        "postalCode": "%s",
         "addressLines": [%s]
       }
     }
     """.formatted(
-                addressInput.regionCode(),
-                addressInput.locality(),
-                addressInput.postalCode(),
                 buildAddressLines(addressInput.addressLines())
         );
     }

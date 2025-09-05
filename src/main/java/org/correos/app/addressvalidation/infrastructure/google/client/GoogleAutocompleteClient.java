@@ -1,6 +1,7 @@
 package org.correos.app.addressvalidation.infrastructure.google.client;
 
 
+import lombok.RequiredArgsConstructor;
 import org.correos.app.addressvalidation.application.model.AddressToValidate;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleApiProps;
 import org.correos.app.addressvalidation.infrastructure.google.config.GoogleAutocompletePlacesProps;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.IntStream;
 
+@RequiredArgsConstructor
 @Component
 public class GoogleAutocompleteClient {
 
@@ -23,19 +25,8 @@ public class GoogleAutocompleteClient {
     private final GoogleAutocompletePlacesProps autoCompleteApiProps;
     private final GoogleApiProps googleApiProps;
 
-    public GoogleAutocompleteClient(
-            RestTemplate restTemplate,
-            GoogleAutocompletePlacesProps autoCompleteApiProps,
-            GoogleApiProps googleApiProps) {
-        this.restTemplate = restTemplate;
-        this.autoCompleteApiProps = autoCompleteApiProps;
-        this.googleApiProps = googleApiProps;
-    }
-
     public List<String> searchPlaceIds(AddressToValidate address) {
-        String rawInput = String.join(" ", address.addressLines()) +
-                " " + address.locality() +
-                " " + address.postalCode();
+        String rawInput = String.join(" ", List.of(address.originalAddress()));
         return searchPlaceIds(rawInput);
     }
 

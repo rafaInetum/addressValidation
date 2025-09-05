@@ -1,4 +1,4 @@
-package org.correos.app.addressvalidation.api.dto.response;
+package org.correos.app.addressvalidation.infrastructure.api.dto.response;
 
 public record SuggestionResponseDTO(
         String placeId,
